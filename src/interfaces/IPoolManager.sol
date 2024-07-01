@@ -1,33 +1,51 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.13;
+import "../protocol/library/type/DataTypes.sol";
 
-interface IFireBridge {
-    struct Request {
-        uint256 amount;
-        uint256 fee;
-    }
+interface IPoolManager {
+    event PoolCreated(
+        address indexed user,
+        DataTypes.UserPoolConfig userPoolConfig
+    );
+    event TokensSupplied(
+        address indexed user,
+        uint256 amount,
+        DataTypes.UserPoolReserveInformation userPoolReserveInformation
+    );
 
-    function addBurnRequest(
-        uint256 _amount
-    ) external returns (bytes32 _hash, Request memory _r);
+    event LoanRequested(
+        address indexed user,
+        uint256 amount,
+        DataTypes.UserPoolReserveInformation userPoolReserveInformation
+    );
 
-    function addMintRequest(
-        uint256 _amount,
-        bytes32 _depositTxid,
-        uint256 _outputIndex
-    ) external returns (bytes32 _hash, Request memory _r);
-}
-
-interface IFBTC1 {
-    function mintLockedFbtcRequest(
-        uint256 _amount
-    ) external returns (uint256 realAmount);
-
-    function redeemFbtcRequest(
-        uint256 _amount,
-        bytes32 _depositTxid,
-        uint256 _outputIndex
-    ) external returns (bytes32 _hash, IFireBridge.Request memory _r);
-
-    function confirmRedeemFbtc(uint256 _amount) external;
+    event TokensBorrowed(
+        address indexed user,
+        uint256 amount,
+        DataTypes.UserPoolReserveInformation userPoolReserveInformation
+    );
+    event TokensRepaid(
+        address indexed user,
+        uint256 amount,
+        DataTypes.UserPoolReserveInformation userPoolReserveInformation
+    );
+    event Liquidation(
+        address indexed user,
+        DataTypes.UserPoolReserveInformation userPoolReserveInformation
+    );
+    event WithdrawalRequested(
+        address indexed user,
+        uint256 amount,
+        DataTypes.UserPoolReserveInformation userPoolReserveInformation
+    );
+    event MintFBTC0Confirmed(
+        uint256 amount,
+        bytes32 depositTxid,
+        uint256 outputIndex
+    );
+    event TokensWithdrawn(
+        address indexed user,
+        uint256 amount,
+        DataTypes.UserPoolReserveInformation userPoolReserveInformation
+    );
 }

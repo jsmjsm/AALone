@@ -13,8 +13,7 @@ library DataTypes {
     /**
      * @dev Structure to hold the configuration of the Pool Manager.
      * @param DEFAULT_MAX_WITHDRAW_RATE The default maximum withdrawal rate (e.g., 50%).
-     * @param DEFAULT_BORROWED_TIMESTAMP The default borrowed timestamp.
-     * @param DEFAULT_INTEREST_RATE The default interest rate (e.g., 5%).
+     * @param DEFAULT_POOL_INTEREST_RATE The default interest rate (e.g., 5%).
      * @param DEFAULT_LTV The default loan-to-value ratio (e.g., 5%).
      * @param PROTOCAL_FEE_INTEREST_RATE The protocol fee ratio.
      * @param USDT The ERC20 USDT contract.
@@ -26,8 +25,7 @@ library DataTypes {
      */
     struct PoolManagerConfig {
         uint256 DEFAULT_MAX_WITHDRAW_RATE;
-        uint256 DEFAULT_BORROWED_TIMESTAMP;
-        uint256 DEFAULT_INTEREST_RATE;
+        uint256 DEFAULT_POOL_INTEREST_RATE;
         uint256 DEFAULT_LTV;
         uint256 PROTOCAL_FEE_INTEREST_RATE;
         IERC20 USDT;
@@ -54,14 +52,14 @@ library DataTypes {
 
     /**
      * @dev Structure to hold the reserve information of a user's pool.
-     * @param borrowedTimeStamp The timestamp when the user last borrowed.
+     * @param timeStampIndex The timestamp when the user last borrowed.
      * @param totalSupply The total supply in the user's pool.
      * @param totalBorrowed The total amount borrowed from the user's pool.
      * @param inBorrowing The amount currently in borrowing.
      * @param inWithdrawing The amount currently in withdrawing.
      */
     struct UserPoolReserveInformation {
-        uint40 borrowedTimeStamp;
+        uint40 timeStampIndex;
         uint256 totalSupply;
         uint256 totalBorrowed;
         uint256 inBorrowing;
