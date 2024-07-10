@@ -42,4 +42,8 @@ contract FBTCOracle is IFBTCOracle, Ownable {
         int256 price = assetSource.latestAnswer();
         return uint256(price);
     }
+
+    function decimals() public view returns (uint8) {
+        return assetSource.decimals();
+    }
 }

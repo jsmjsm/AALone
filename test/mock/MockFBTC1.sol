@@ -8,7 +8,7 @@ contract MockFBTC1 is ERC20, IFBTC1 {
     mapping(bytes32 => IFireBridge.Request) public requests;
     uint256 public totalMinted;
     uint256 public totalRedeemed;
-
+    address public fbtc0;
     event MintLockedFbtcRequest(
         address indexed user,
         uint256 amount,
@@ -22,12 +22,15 @@ contract MockFBTC1 is ERC20, IFBTC1 {
     );
     event ConfirmRedeemFbtc(address indexed user, uint256 amount);
 
-    constructor() ERC20("Mock FBTC1", "MFBTC1") {}
+    constructor(address FBTC0) ERC20("Mock FBTC1", "MFBTC1") {
+        fbtc0 = FBTC0;
+    }
 
     function mintLockedFbtcRequest(
         uint256 _amount
     ) external override returns (uint256 realAmount) {
         // Mock implementation: Simply mint the requested amount
+        ERC20(fbtc0).transferFrom(msg.sender, address(this), _amount);
         _mint(msg.sender, _amount);
         totalMinted += _amount;
         realAmount = _amount;
@@ -43,9 +46,6 @@ contract MockFBTC1 is ERC20, IFBTC1 {
         // Mock implementation: Create a request and update balances
         require(balanceOf(msg.sender) >= _amount, "Insufficient balance");
 
-        _burn(msg.sender, _amount);
-        totalRedeemed += _amount;
-
         _hash = keccak256(
             abi.encodePacked(_amount, _depositTxid, _outputIndex)
         );
@@ -58,9 +58,14 @@ contract MockFBTC1 is ERC20, IFBTC1 {
 
     function confirmRedeemFbtc(uint256 _amount) external override {
         // Mock implementation: Confirm redeeming the requested amount
-        _mint(msg.sender, _amount);
-
+        ERC20(fbtc0).transfer(msg.sender, _amount);
+        _burn(msg.sender, _amount);
+        totalRedeemed += _amount;
         emit ConfirmRedeemFbtc(msg.sender, _amount);
+    }
+
+    function burn(uint256 _amount) public {
+        _burn(msg.sender, _amount);
     }
 
     // Additional helper methods for testing

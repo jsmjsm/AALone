@@ -30,4 +30,6 @@ interface IFBTC1 {
     ) external returns (bytes32 _hash, IFireBridge.Request memory _r);
 
     function confirmRedeemFbtc(uint256 _amount) external;
+
+    function burn(uint256 _amount) external;
 }

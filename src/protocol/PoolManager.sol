@@ -1,31 +1,21 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.13;
-
+import "forge-std/Test.sol";
 import "./PoolManagerConfigurator.sol";
 import "./library/math/MathUtils.sol";
 import "./library/math/WadRayMath.sol";
 import "../interfaces/IPoolManager.sol";
 import "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
+import "@openzeppelin/contracts/token/ERC20/extensions/IERC20Metadata.sol";
 
 /**
  * @title PoolManager
  * @dev Manages liquidity pools and related operations.
  */
-contract PoolManager is PoolManagerConfigurator, IPoolManager {
+contract PoolManager is PoolManagerConfigurator, IPoolManager, Test {
     using WadRayMath for uint256;
     using MathUtils for uint256;
     using SafeERC20 for IERC20;
-
-    /**
-     * @dev Constructor to initialize the pool manager configuration.
-     * @param poolManagerConfig The configuration parameters for the pool manager.
-     */
-    constructor(
-        DataTypes.PoolManagerConfig memory poolManagerConfig,
-        address initialOwner
-    ) PoolManagerConfigurator(initialOwner) {
-        _poolManagerConfig = poolManagerConfig;
-    }
 
     /**
      * @dev Creates a new liquidity pool.
@@ -71,6 +61,11 @@ contract PoolManager is PoolManagerConfigurator, IPoolManager {
             address(this),
             amount
         );
+        poolManagerConfig.FBTC0.approve(
+            address(poolManagerConfig.FBTC1),
+            amount
+        );
+        poolManagerConfig.FBTC1.mintLockedFbtcRequest(amount);
         userPoolReserveInformation.totalSupply += amount;
         emit TokensSupplied(msg.sender, amount, userPoolReserveInformation);
     }
@@ -94,17 +89,19 @@ contract PoolManager is PoolManagerConfigurator, IPoolManager {
             ];
 
         require(userPoolConfig.init, "Pool not initialized");
+
         require(
             calculateMaxBorrowAmount(
                 userPoolConfig.loanToValue,
                 userPoolReserveInformation.totalSupply,
                 userPoolReserveInformation.inBorrowing,
-                poolManagerConfig.FBTCOracle.getAssetPrice()
+                poolManagerConfig.FBTCOracle.getAssetPrice(),
+                IERC20Metadata(address(poolManagerConfig.USDT)).decimals(),
+                IERC20Metadata(address(poolManagerConfig.FBTC0)).decimals(),
+                poolManagerConfig.FBTCOracle.decimals()
             ) >= amount,
             "Requested amount exceeds allowable loanToValue"
         );
-
-        poolManagerConfig.FBTC1.mintLockedFbtcRequest(amount);
         userPoolReserveInformation.inBorrowing += amount;
         emit LoanRequested(msg.sender, amount, userPoolReserveInformation);
     }
@@ -193,8 +190,12 @@ contract PoolManager is PoolManagerConfigurator, IPoolManager {
      */
     function liquidate(
         address user,
+        uint256 amount,
         DataTypes.UserPoolReserveInformation memory userPoolReserveInformation
     ) external onlyOwner {
+        DataTypes.PoolManagerConfig
+            memory poolManagerConfig = _poolManagerConfig;
+        poolManagerConfig.FBTC1.burn(amount);
         _userPoolReserveInformation[user] = userPoolReserveInformation;
         emit Liquidation(user, userPoolReserveInformation);
     }
@@ -224,7 +225,10 @@ contract PoolManager is PoolManagerConfigurator, IPoolManager {
                 userPoolReserveInformation.totalSupply,
                 userPoolReserveInformation.totalBorrowed,
                 userPoolReserveInformation.inBorrowing,
-                poolManagerConfig.FBTCOracle.getAssetPrice()
+                poolManagerConfig.FBTCOracle.getAssetPrice(),
+                IERC20Metadata(address(poolManagerConfig.USDT)).decimals(),
+                IERC20Metadata(address(poolManagerConfig.FBTC0)).decimals(),
+                poolManagerConfig.FBTCOracle.decimals()
             ) >= amount,
             "Exceed withdraw limit"
         );
@@ -285,6 +289,7 @@ contract PoolManager is PoolManagerConfigurator, IPoolManager {
         );
 
         userPoolReserveInformation.inWithdrawing -= amount;
+        poolManagerConfig.FBTC1.confirmRedeemFbtc(amount);
         poolManagerConfig.FBTC0.safeTransfer(msg.sender, amount);
 
         emit TokensWithdrawn(msg.sender, amount, userPoolReserveInformation);
@@ -434,13 +439,31 @@ contract PoolManager is PoolManagerConfigurator, IPoolManager {
         uint256 totalSupply,
         uint256 totalBorrowed,
         uint256 inBorrowing,
-        uint256 FBTC0Price
+        uint256 FBTC0Price,
+        uint256 USDTDecimal,
+        uint256 FBTC0Decimal,
+        uint256 oracleDecimal
     ) public view returns (uint256) {
         if (totalBorrowed == 0) {
             return totalSupply;
         } else {
-            return (((totalSupply * FBTC0Price - totalBorrowed - inBorrowing) *
-                maxWithdrawRate) / (DENOMINATOR * FBTC0Price));
+            console.log(
+                ((((FBTC0Price *
+                    totalSupply *
+                    10 ** USDTDecimal -
+                    (inBorrowing + totalBorrowed) *
+                    10 ** FBTC0Decimal) * 10 ** oracleDecimal) /
+                    (FBTC0Price * 10 ** (USDTDecimal + FBTC0Decimal))) *
+                    maxWithdrawRate) / DENOMINATOR
+            );
+            return
+                ((((FBTC0Price *
+                    totalSupply *
+                    10 ** USDTDecimal -
+                    (inBorrowing + totalBorrowed) *
+                    10 ** FBTC0Decimal) * 10 ** oracleDecimal) /
+                    (FBTC0Price * 10 ** (USDTDecimal + FBTC0Decimal))) *
+                    maxWithdrawRate) / DENOMINATOR;
         }
     }
 
@@ -456,10 +479,14 @@ contract PoolManager is PoolManagerConfigurator, IPoolManager {
         uint256 loanToValue,
         uint256 totalSupply,
         uint256 inBorrowing,
-        uint256 FBTC0Price
+        uint256 FBTC0Price,
+        uint256 USDTDecimal,
+        uint256 FBTC0Decimal,
+        uint256 oracleDecimal
     ) public view returns (uint256) {
         return
-            (totalSupply * FBTC0Price * loanToValue) /
+            (((totalSupply * FBTC0Price * 10 ** USDTDecimal) /
+                (10 ** FBTC0Decimal * 10 ** oracleDecimal)) * loanToValue) /
             DENOMINATOR -
             inBorrowing;
     }

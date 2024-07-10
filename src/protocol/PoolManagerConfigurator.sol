@@ -2,13 +2,15 @@
 pragma solidity ^0.8.13;
 
 import "./PoolManagerStorage.sol";
-import "@openzeppelin/contracts/access/Ownable.sol";
+import "@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol";
 
 /**
  * @title PoolManagerConfigurator
  */
-contract PoolManagerConfigurator is PoolManagerStorage, Ownable {
-    constructor(address initialOwner) Ownable(initialOwner) {}
+contract PoolManagerConfigurator is PoolManagerStorage, OwnableUpgradeable {
+    function initialize(address owner) public initializer {
+        __Ownable_init(owner);
+    }
 
     /**
      * @dev Sets the configuration for the pool manager.

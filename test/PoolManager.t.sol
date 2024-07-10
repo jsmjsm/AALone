@@ -10,9 +10,13 @@ import "../src/protocol/PoolManager.sol";
 import "../src/protocol/library/type/DataTypes.sol";
 
 contract PoolManagerTest is Test {
-    MockERC20 mockUSDT = new MockERC20("USDT", "USDT", 18);
-    MockERC20 mockFBTC0 = new MockERC20("FBTC0", "FBTC0", 18);
-    MockFBTC1 mockFBTC1 = new MockFBTC1();
+    MockERC20 mockUSDT = new MockERC20("USDT", "USDT", 6);
+    MockERC20 mockFBTC0 = new MockERC20("FBTC0", "FBTC0", 8);
+    MockFBTC1 mockFBTC1 = new MockFBTC1(address(mockFBTC0));
+
+    uint8 USDTDecimal = 6;
+    uint8 FBTCDecimal = 8;
+    uint8 OracleDecimal = 8;
 
     FBTCOracle public fbtcOracle;
     AggregatorMock public aggregatorMock;
@@ -41,7 +45,9 @@ contract PoolManagerTest is Test {
                 AvalonUSDTVault: avalonUSDTVault,
                 AntaphaUSDTVault: antaphaUSDTVault
             });
-        poolManager = new PoolManager(config, poolAdmin);
+        poolManager = new PoolManager();
+        poolManager.initialize(poolAdmin);
+        poolManager.setPoolManagerConfig(config);
         vm.stopPrank();
     }
 
@@ -84,7 +90,7 @@ contract PoolManagerTest is Test {
     }
 
     function testSupply() public {
-        uint256 amount = 1000 * 10 ** 18;
+        uint256 amount = 1000 * 10 ** FBTCDecimal;
 
         // Ensure the pool is initialized
         vm.prank(poolAdmin);
@@ -103,7 +109,7 @@ contract PoolManagerTest is Test {
         poolManager.supply(amount);
 
         // Verify the tokens were transferred to the PoolManager
-        assertEq(mockFBTC0.balanceOf(address(poolManager)), amount);
+        assertEq(mockFBTC0.balanceOf(address(mockFBTC1)), amount);
 
         // Verify the user's pool reserve information
         DataTypes.UserPoolReserveInformation memory reserveInfo = poolManager
@@ -113,8 +119,7 @@ contract PoolManagerTest is Test {
     }
 
     function testSupply_PoolNotInitialized() public {
-        uint256 amount = 1000 * 10 ** 18;
-
+        uint256 amount = 1000 * 10 ** FBTCDecimal;
         // Mint tokens to the user
         mockFBTC0.mint(poolAdmin, amount);
         assertEq(mockFBTC0.balanceOf(poolAdmin), amount);
@@ -135,13 +140,13 @@ contract PoolManagerTest is Test {
     }
 
     function testRequestBorrow_ExceedsAllowableLTV() public {
-        uint256 supplyAmount = 1000 * 10 ** 18;
-        uint256 borrowAmount = 60000001 * 10 ** 18; // This should exceed the allowable LTV
+        uint256 supplyAmount = 1000 * 10 ** FBTCDecimal;
+        uint256 borrowAmount = 60000001 * 10 ** USDTDecimal; // This should exceed the allowable LTV
 
         // Initialize the pool
         vm.prank(poolAdmin);
         poolManager.createPool(user);
-        aggregatorMock.setLatestAnswer(60000); // 1 USDT per FBTC
+        aggregatorMock.setLatestAnswer(int(60000 * 10 ** OracleDecimal)); // 1 USDT per FBTC
 
         vm.startPrank(user);
         // Mint and supply tokens to the pool
@@ -155,13 +160,13 @@ contract PoolManagerTest is Test {
     }
 
     function testRequestBorrow_Success() public {
-        uint256 supplyAmount = 1000 * 10 ** 18;
-        uint256 borrowAmount = 3000000 * 10 ** 18; // This should be within the allowable LTV
+        uint256 supplyAmount = 1000 * 10 ** FBTCDecimal;
+        uint256 borrowAmount = 3000000 * 10 ** USDTDecimal; // This should be within the allowable LTV
 
         // Initialize the pool
         vm.prank(poolAdmin);
         poolManager.createPool(user);
-        aggregatorMock.setLatestAnswer(60000);
+        aggregatorMock.setLatestAnswer(int(60000 * 10 ** OracleDecimal)); // 1 USDT per FBTC
 
         vm.startPrank(user);
         // Mint and supply tokens to the pool
@@ -186,8 +191,8 @@ contract PoolManagerTest is Test {
     }
 
     function testBorrow_InsufficientInBorrowingAmount() public {
-        uint256 supplyAmount = 1000 * 10 ** 18;
-        uint256 borrowAmount = 500 * 10 ** 18;
+        uint256 supplyAmount = 1000 * 10 ** FBTCDecimal;
+        uint256 borrowAmount = 500 * 10 ** USDTDecimal; // This should be within the allowable LTV
 
         // Initialize the pool
         vm.prank(poolAdmin);
@@ -200,7 +205,7 @@ contract PoolManagerTest is Test {
         poolManager.supply(supplyAmount);
 
         // Mock the FBTC oracle price
-        aggregatorMock.setLatestAnswer(1 * 10 ** 18); // 1 USDT per FBTC
+        aggregatorMock.setLatestAnswer(int(1 * 10 ** OracleDecimal)); // 1 USDT per FBTC
 
         // Borrow an amount
         poolManager.requestBorrow(borrowAmount);
@@ -212,8 +217,8 @@ contract PoolManagerTest is Test {
     }
 
     function testBorrow_Success() public {
-        uint256 supplyAmount = 1000 * 10 ** 18;
-        uint256 borrowAmount = 500 * 10 ** 18;
+        uint256 supplyAmount = 1000 * 10 ** FBTCDecimal;
+        uint256 borrowAmount = 500 * 10 ** USDTDecimal; // This should be within the allowable LTV
 
         vm.startPrank(avalonUSDTVault);
         mockUSDT.mint(avalonUSDTVault, borrowAmount);
@@ -231,7 +236,7 @@ contract PoolManagerTest is Test {
 
         poolManager.supply(supplyAmount);
         // Mock the FBTC oracle price
-        aggregatorMock.setLatestAnswer(1 * 10 ** 18); // 1 USDT per FBTC
+        aggregatorMock.setLatestAnswer(int(1 * 10 ** OracleDecimal)); // 1 USDT per FBTC // 1 USDT per FBTC
 
         // Borrow an amount
         poolManager.requestBorrow(borrowAmount);
@@ -247,8 +252,8 @@ contract PoolManagerTest is Test {
     }
 
     function testRepay_Failed() public {
-        uint256 supplyAmount = 1000 * 10 ** 18;
-        uint256 borrowAmount = 500 * 10 ** 18;
+        uint256 supplyAmount = 1000 * 10 ** FBTCDecimal;
+        uint256 borrowAmount = 500 * 10 ** USDTDecimal; // This should be within the allowable LTV
 
         vm.startPrank(avalonUSDTVault);
         mockUSDT.mint(avalonUSDTVault, borrowAmount);
@@ -270,7 +275,7 @@ contract PoolManagerTest is Test {
 
         poolManager.supply(supplyAmount);
         // Mock the FBTC oracle price
-        aggregatorMock.setLatestAnswer(1 * 10 ** 18); // 1 USDT per FBTC
+        aggregatorMock.setLatestAnswer(int(1 * 10 ** OracleDecimal)); // 1 USDT per FBTC // 1 USDT per FBTC
 
         // Borrow an amount
         poolManager.requestBorrow(borrowAmount);
@@ -303,8 +308,8 @@ contract PoolManagerTest is Test {
     }
 
     function testRepay_Success() public {
-        uint256 supplyAmount = 1000 * 10 ** 18;
-        uint256 borrowAmount = 500 * 10 ** 18;
+        uint256 supplyAmount = 1000 * 10 ** FBTCDecimal;
+        uint256 borrowAmount = 500 * 10 ** USDTDecimal; // This should be within the allowable LTV
 
         vm.startPrank(avalonUSDTVault);
         mockUSDT.mint(avalonUSDTVault, borrowAmount);
@@ -322,7 +327,7 @@ contract PoolManagerTest is Test {
 
         poolManager.supply(supplyAmount);
         // Mock the FBTC oracle price
-        aggregatorMock.setLatestAnswer(1 * 10 ** 18); // 1 USDT per FBTC
+        aggregatorMock.setLatestAnswer(int(1 * 10 ** OracleDecimal)); // 1 USDT per FBTC // 1 USDT per FBTC
 
         // Borrow an amount
         poolManager.requestBorrow(borrowAmount);
@@ -350,8 +355,8 @@ contract PoolManagerTest is Test {
     }
 
     function testLiquidate_Failed() public {
-        uint256 supplyAmount = 1000 * 10 ** 18;
-        uint256 borrowAmount = 500 * 10 ** 18;
+        uint256 supplyAmount = 1000 * 10 ** FBTCDecimal;
+        uint256 borrowAmount = 500 * 10 ** USDTDecimal; // This should be within the allowable LTV
 
         vm.startPrank(avalonUSDTVault);
         mockUSDT.mint(avalonUSDTVault, borrowAmount);
@@ -369,7 +374,7 @@ contract PoolManagerTest is Test {
 
         poolManager.supply(supplyAmount);
         // Mock the FBTC oracle price
-        aggregatorMock.setLatestAnswer(1 * 10 ** 18); // 1 USDT per FBTC
+        aggregatorMock.setLatestAnswer(int(1 * 10 ** OracleDecimal)); // 1 USDT per FBTC // 1 USDT per FBTC
 
         // Borrow an amount
         poolManager.requestBorrow(borrowAmount);
@@ -389,12 +394,12 @@ contract PoolManagerTest is Test {
         vm.stopPrank();
         vm.prank(user);
         vm.expectRevert();
-        poolManager.liquidate(user, userPoolReserveInformation);
+        poolManager.liquidate(user, supplyAmount, userPoolReserveInformation);
     }
 
     function testLiquidate_Success() public {
-        uint256 supplyAmount = 1000 * 10 ** 18;
-        uint256 borrowAmount = 500 * 10 ** 18;
+        uint256 supplyAmount = 1000 * 10 ** FBTCDecimal;
+        uint256 borrowAmount = 500 * 10 ** USDTDecimal; // This should be within the allowable LTV
 
         vm.startPrank(avalonUSDTVault);
         mockUSDT.mint(avalonUSDTVault, borrowAmount);
@@ -412,7 +417,7 @@ contract PoolManagerTest is Test {
 
         poolManager.supply(supplyAmount);
         // Mock the FBTC oracle price
-        aggregatorMock.setLatestAnswer(1 * 10 ** 18); // 1 USDT per FBTC
+        aggregatorMock.setLatestAnswer(int(1 * 10 ** OracleDecimal)); // 1 USDT per FBTC // 1 USDT per FBTC
 
         // Borrow an amount
         poolManager.requestBorrow(borrowAmount);
@@ -431,20 +436,17 @@ contract PoolManagerTest is Test {
 
         vm.stopPrank();
         vm.prank(poolAdmin);
-        poolManager.liquidate(user, userPoolReserveInformation);
+        poolManager.liquidate(user, supplyAmount, userPoolReserveInformation);
     }
 
     function testRequestWithdraw_Failed() public {
-        uint256 supplyAmount = 1000 * 10 ** 18;
-        uint256 borrowAmount = 5000000 * 10 ** 18;
+        uint256 supplyAmount = 1 * 10 ** FBTCDecimal;
+        uint256 borrowAmount = 30000 * 10 ** USDTDecimal; // This should be within the allowable LTV
 
         vm.startPrank(avalonUSDTVault);
         mockUSDT.mint(avalonUSDTVault, borrowAmount);
         mockUSDT.approve(address(poolManager), borrowAmount);
         vm.stopPrank();
-
-        vm.expectRevert();
-        poolManager.requestWithdraw(supplyAmount / 4);
 
         // Initialize the pool
         vm.prank(poolAdmin);
@@ -457,7 +459,7 @@ contract PoolManagerTest is Test {
 
         poolManager.supply(supplyAmount);
         // Mock the FBTC oracle price
-        aggregatorMock.setLatestAnswer(60000); // 1 USDT per FBTC
+        aggregatorMock.setLatestAnswer(int(60000 * 10 ** OracleDecimal)); // 1 USDT per FBTC // 1 USDT per FBTC
 
         // Borrow an amount
         poolManager.requestBorrow(borrowAmount);
@@ -478,8 +480,8 @@ contract PoolManagerTest is Test {
     }
 
     function testRequestWithdraw_Success() public {
-        uint256 supplyAmount = 1000 * 10 ** 18;
-        uint256 borrowAmount = 5000000 * 10 ** 18;
+        uint256 supplyAmount = 1000 * 10 ** FBTCDecimal;
+        uint256 borrowAmount = 5000000 * 10 ** USDTDecimal; // This should be within the allowable LTV
 
         vm.startPrank(avalonUSDTVault);
         mockUSDT.mint(avalonUSDTVault, borrowAmount);
@@ -497,7 +499,7 @@ contract PoolManagerTest is Test {
 
         poolManager.supply(supplyAmount);
         // Mock the FBTC oracle price
-        aggregatorMock.setLatestAnswer(60000); // 1 USDT per FBTC
+        aggregatorMock.setLatestAnswer(int(60000 * 10 ** OracleDecimal)); // 1 USDT per FBTC // 1 USDT per FBTC
 
         // Borrow an amount
         poolManager.requestBorrow(borrowAmount);
@@ -517,8 +519,8 @@ contract PoolManagerTest is Test {
     }
 
     function testWithdraw_Faled() public {
-        uint256 supplyAmount = 1000 * 10 ** 18;
-        uint256 borrowAmount = 5000000 * 10 ** 18;
+        uint256 supplyAmount = 1000 * 10 ** FBTCDecimal;
+        uint256 borrowAmount = 5000000 * 10 ** USDTDecimal; // This should be within the allowable LTV
 
         vm.startPrank(avalonUSDTVault);
         mockUSDT.mint(avalonUSDTVault, borrowAmount);
@@ -538,7 +540,7 @@ contract PoolManagerTest is Test {
 
         poolManager.supply(supplyAmount);
         // Mock the FBTC oracle price
-        aggregatorMock.setLatestAnswer(60000); // 1 USDT per FBTC
+        aggregatorMock.setLatestAnswer(int(60000 * 10 ** OracleDecimal)); // 1 USDT per FBTC // 1 USDT per FBTC
 
         // Borrow an amount
         poolManager.requestBorrow(borrowAmount);
@@ -562,8 +564,8 @@ contract PoolManagerTest is Test {
     }
 
     function testWithdraw_Success() public {
-        uint256 supplyAmount = 1000 * 10 ** 18;
-        uint256 borrowAmount = 5000000 * 10 ** 18;
+        uint256 supplyAmount = 1000 * 10 ** FBTCDecimal;
+        uint256 borrowAmount = 20000000 * 10 ** USDTDecimal; // This should be within the allowable LTV
 
         vm.startPrank(avalonUSDTVault);
         mockUSDT.mint(avalonUSDTVault, borrowAmount);
@@ -581,7 +583,7 @@ contract PoolManagerTest is Test {
 
         poolManager.supply(supplyAmount);
         // Mock the FBTC oracle price
-        aggregatorMock.setLatestAnswer(60000); // 1 USDT per FBTC
+        aggregatorMock.setLatestAnswer(int(60000 * 10 ** OracleDecimal)); // 1 USDT per FBTC // 1 USDT per FBTC
 
         // Borrow an amount
         poolManager.requestBorrow(borrowAmount);

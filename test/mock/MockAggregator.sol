@@ -15,6 +15,10 @@ contract AggregatorMock is AggregatorInterface {
         emit AnswerUpdated(answer, _latestRound, block.timestamp);
     }
 
+    function decimals() external view override returns (uint8) {
+        return 8;
+    }
+
     function latestAnswer() external view override returns (int256) {
         return _latestAnswer;
     }

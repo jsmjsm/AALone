@@ -18,7 +18,8 @@ contract PoolManagerStorageTest is Test {
 
     function setUp() public {
         vm.startPrank(admin);
-        poolManagerConfigurator = new PoolManagerConfigurator(admin);
+        poolManagerConfigurator = new PoolManagerConfigurator();
+        poolManagerConfigurator.initialize(admin);
         vm.stopPrank();
     }
 
