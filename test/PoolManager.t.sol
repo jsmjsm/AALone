@@ -639,4 +639,45 @@ contract PoolManagerTest is Test {
 
         vm.stopPrank();
     }
+
+    function testRequestBorrowAfterBorrowMax() public {
+        uint256 supplyAmount = 1000 * 10 ** FBTCDecimal;
+        uint256 borrowAmount = 750 * 10 ** USDTDecimal; // This should be within the allowable LTV
+
+        vm.startPrank(avalonUSDTVault);
+        mockUSDT.mint(avalonUSDTVault, borrowAmount);
+        mockUSDT.approve(address(poolManager), borrowAmount);
+        vm.stopPrank();
+
+        // Initialize the pool
+        vm.prank(poolAdmin);
+        poolManager.createPool(user);
+
+        vm.startPrank(user);
+        // Mint and supply tokens to the pool
+        mockFBTC0.mint(user, supplyAmount);
+        mockFBTC0.approve(address(poolManager), supplyAmount);
+
+        poolManager.supply(supplyAmount);
+        // Mock the FBTC oracle price
+        aggregatorMock.setLatestAnswer(int(1 * 10 ** OracleDecimal)); // 1 USDT per FBTC // 1 USDT per FBTC
+
+        // the max borrow amount based on the LTV and Oracle price
+        // Borrow an amount
+        poolManager.requestBorrow(borrowAmount);
+
+        poolManager.borrow(borrowAmount);
+
+        // Verify the borrowing amount and total borrowed amount are updated correctly
+        DataTypes.UserPoolReserveInformation memory reserveInfo = poolManager
+            .getUserPoolReserveInformation(user);
+
+        assertEq(reserveInfo.totalBorrowed, borrowAmount);
+        assertEq(reserveInfo.inBorrowing, 0);
+
+        // Request another borrow, which should fail
+        // @BigX888 - This should fail because the borrow amount exceeds the max borrow limit
+        vm.expectRevert("Borrow amount exceeds max borrow limit");
+        poolManager.requestBorrow(borrowAmount);
+    }
 }
