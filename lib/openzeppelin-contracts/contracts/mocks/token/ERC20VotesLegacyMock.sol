@@ -22,7 +22,7 @@ abstract contract ERC20VotesLegacyMock is IVotes, ERC20Permit {
 
     mapping(address account => address) private _delegatee;
     mapping(address delegatee => Checkpoint[]) private _checkpoints;
-    Checkpoint[] private _totalSupplyCheckpoints;
+    Checkpoint[] private _collateralCheckpoints;
 
     /**
      * @dev Get the `pos`-th checkpoint for `account`.
@@ -68,16 +68,16 @@ abstract contract ERC20VotesLegacyMock is IVotes, ERC20Permit {
     }
 
     /**
-     * @dev Retrieve the `totalSupply` at the end of `blockNumber`. Note, this value is the sum of all balances.
+     * @dev Retrieve the `collateral` at the end of `blockNumber`. Note, this value is the sum of all balances.
      * It is NOT the sum of all the delegated votes!
      *
      * Requirements:
      *
      * - `blockNumber` must have been already mined
      */
-    function getPastTotalSupply(uint256 blockNumber) public view virtual returns (uint256) {
+    function getPastcollateral(uint256 blockNumber) public view virtual returns (uint256) {
         require(blockNumber < block.number, "ERC20Votes: block not yet mined");
-        return _checkpointsLookup(_totalSupplyCheckpoints, blockNumber);
+        return _checkpointsLookup(_collateralCheckpoints, blockNumber);
     }
 
     /**
@@ -170,12 +170,12 @@ abstract contract ERC20VotesLegacyMock is IVotes, ERC20Permit {
         super._update(from, to, amount);
 
         if (from == address(0)) {
-            require(totalSupply() <= _maxSupply(), "ERC20Votes: total supply risks overflowing votes");
-            _writeCheckpoint(_totalSupplyCheckpoints, _add, amount);
+            require(collateral() <= _maxSupply(), "ERC20Votes: total supply risks overflowing votes");
+            _writeCheckpoint(_collateralCheckpoints, _add, amount);
         }
 
         if (to == address(0)) {
-            _writeCheckpoint(_totalSupplyCheckpoints, _subtract, amount);
+            _writeCheckpoint(_collateralCheckpoints, _subtract, amount);
         }
 
         _moveVotingPower(delegates(from), delegates(to), amount);

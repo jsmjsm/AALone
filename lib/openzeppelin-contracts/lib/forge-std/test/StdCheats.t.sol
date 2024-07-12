@@ -97,10 +97,10 @@ contract StdCheatsTest is Test {
         address bar = address(barToken);
         deal(bar, address(this), 10000e18, true);
         assertEq(barToken.balanceOf(address(this)), 10000e18);
-        assertEq(barToken.totalSupply(), 20000e18);
+        assertEq(barToken.collateral(), 20000e18);
         deal(bar, address(this), 0, true);
         assertEq(barToken.balanceOf(address(this)), 0);
-        assertEq(barToken.totalSupply(), 10000e18);
+        assertEq(barToken.collateral(), 10000e18);
     }
 
     function testDeployCode() public {
@@ -274,8 +274,8 @@ contract StdCheatsTest is Test {
 contract Bar {
     constructor() payable {
         /// `DEAL` STDCHEAT
-        totalSupply = 10000e18;
-        balanceOf[address(this)] = totalSupply;
+        collateral = 10000e18;
+        balanceOf[address(this)] = collateral;
     }
 
     /// `HOAX` STDCHEATS
@@ -295,7 +295,7 @@ contract Bar {
 
     /// `DEAL` STDCHEAT
     mapping(address => uint256) public balanceOf;
-    uint256 public totalSupply;
+    uint256 public collateral;
 }
 
 contract RevertingContract {

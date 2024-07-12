@@ -34,7 +34,7 @@ contract PoolManagerTest is Test {
         fbtcOracle = new FBTCOracle(aggregatorMock, oracleOwner);
         DataTypes.PoolManagerConfig memory config = DataTypes
             .PoolManagerConfig({
-                DEFAULT_MAX_WITHDRAW_RATE: 5000,
+                DEFAULT_LIQUIDATION_THRESHOLD: 5000,
                 DEFAULT_POOL_INTEREST_RATE: 500,
                 DEFAULT_LTV: 5000,
                 PROTOCAL_FEE_INTEREST_RATE: 100,
@@ -75,8 +75,8 @@ contract PoolManagerTest is Test {
             storedConfig.DEFAULT_POOL_INTEREST_RATE
         );
         assertEq(
-            userPoolConfig.maxWithdrawRate,
-            storedConfig.DEFAULT_MAX_WITHDRAW_RATE
+            userPoolConfig.liquidationThreshold,
+            storedConfig.DEFAULT_LIQUIDATION_THRESHOLD
         );
         assertEq(userPoolConfig.loanToValue, storedConfig.DEFAULT_LTV);
     }
@@ -115,7 +115,7 @@ contract PoolManagerTest is Test {
         DataTypes.UserPoolReserveInformation memory reserveInfo = poolManager
             .getUserPoolReserveInformation(user);
 
-        assertEq(reserveInfo.totalSupply, amount);
+        assertEq(reserveInfo.collateral, amount);
     }
 
     function testSupply_PoolNotInitialized() public {
@@ -179,7 +179,7 @@ contract PoolManagerTest is Test {
         // Verify the borrowing amount is updated correctly
         DataTypes.UserPoolReserveInformation memory reserveInfo = poolManager
             .getUserPoolReserveInformation(user);
-        assertEq(reserveInfo.inBorrowing, borrowAmount);
+        assertEq(reserveInfo.claimableUSDT, borrowAmount);
     }
 
     function testBorrow_PoolNotInitialized() public {
@@ -190,7 +190,7 @@ contract PoolManagerTest is Test {
         poolManager.borrow(borrowAmount);
     }
 
-    function testBorrow_InsufficientInBorrowingAmount() public {
+    function testBorrow_InsufficientclaimableUSDTAmount() public {
         uint256 supplyAmount = 1000 * 10 ** FBTCDecimal;
         uint256 borrowAmount = 500 * 10 ** USDTDecimal; // This should be within the allowable LTV
 
@@ -210,9 +210,9 @@ contract PoolManagerTest is Test {
         // Borrow an amount
         poolManager.requestBorrow(borrowAmount);
 
-        // Attempt to borrow more than the inBorrowing amount
+        // Attempt to borrow more than the claimableUSDT amount
         uint256 excessBorrowAmount = borrowAmount + 1;
-        vm.expectRevert("Insufficient inBorrowing amount");
+        vm.expectRevert("Insufficient claimableUSDT amount");
         poolManager.borrow(excessBorrowAmount);
     }
 
@@ -247,8 +247,8 @@ contract PoolManagerTest is Test {
         DataTypes.UserPoolReserveInformation memory reserveInfo = poolManager
             .getUserPoolReserveInformation(user);
 
-        assertEq(reserveInfo.totalBorrowed, borrowAmount);
-        assertEq(reserveInfo.inBorrowing, 0);
+        assertEq(reserveInfo.debt, borrowAmount);
+        assertEq(reserveInfo.claimableUSDT, 0);
     }
 
     function testRepay_Failed() public {
@@ -286,8 +286,8 @@ contract PoolManagerTest is Test {
         DataTypes.UserPoolReserveInformation memory reserveInfo = poolManager
             .getUserPoolReserveInformation(user);
 
-        assertEq(reserveInfo.totalBorrowed, borrowAmount);
-        assertEq(reserveInfo.inBorrowing, 0);
+        assertEq(reserveInfo.debt, borrowAmount);
+        assertEq(reserveInfo.claimableUSDT, 0);
         uint256 bocktime = block.timestamp;
         skip(365 days);
 
@@ -338,8 +338,8 @@ contract PoolManagerTest is Test {
         DataTypes.UserPoolReserveInformation memory reserveInfo = poolManager
             .getUserPoolReserveInformation(user);
 
-        assertEq(reserveInfo.totalBorrowed, borrowAmount);
-        assertEq(reserveInfo.inBorrowing, 0);
+        assertEq(reserveInfo.debt, borrowAmount);
+        assertEq(reserveInfo.claimableUSDT, 0);
         uint256 bocktime = block.timestamp;
         skip(365 days);
 
@@ -385,10 +385,10 @@ contract PoolManagerTest is Test {
             memory userPoolReserveInformation = DataTypes
                 .UserPoolReserveInformation({
                     timeStampIndex: uint40(block.timestamp),
-                    totalSupply: 0,
-                    totalBorrowed: 0,
-                    inBorrowing: 0,
-                    inWithdrawing: 0
+                    collateral: 0,
+                    debt: 0,
+                    claimableUSDT: 0,
+                    claimableBTC: 0
                 });
 
         vm.stopPrank();
@@ -428,10 +428,10 @@ contract PoolManagerTest is Test {
             memory userPoolReserveInformation = DataTypes
                 .UserPoolReserveInformation({
                     timeStampIndex: uint40(block.timestamp),
-                    totalSupply: 0,
-                    totalBorrowed: 0,
-                    inBorrowing: 0,
-                    inWithdrawing: 0
+                    collateral: 0,
+                    debt: 0,
+                    claimableUSDT: 0,
+                    claimableBTC: 0
                 });
 
         vm.stopPrank();
@@ -470,8 +470,8 @@ contract PoolManagerTest is Test {
         DataTypes.UserPoolReserveInformation memory reserveInfo = poolManager
             .getUserPoolReserveInformation(user);
 
-        assertEq(reserveInfo.totalBorrowed, borrowAmount);
-        assertEq(reserveInfo.inBorrowing, 0);
+        assertEq(reserveInfo.debt, borrowAmount);
+        assertEq(reserveInfo.claimableUSDT, 0);
         skip(365 days);
         mockUSDT.approve(address(poolManager), borrowAmount);
         poolManager.repay(borrowAmount);
@@ -510,8 +510,8 @@ contract PoolManagerTest is Test {
         DataTypes.UserPoolReserveInformation memory reserveInfo = poolManager
             .getUserPoolReserveInformation(user);
 
-        assertEq(reserveInfo.totalBorrowed, borrowAmount);
-        assertEq(reserveInfo.inBorrowing, 0);
+        assertEq(reserveInfo.debt, borrowAmount);
+        assertEq(reserveInfo.claimableUSDT, 0);
         skip(365 days);
         mockUSDT.approve(address(poolManager), borrowAmount);
         poolManager.repay(borrowAmount);
@@ -551,8 +551,8 @@ contract PoolManagerTest is Test {
         DataTypes.UserPoolReserveInformation memory reserveInfo = poolManager
             .getUserPoolReserveInformation(user);
 
-        assertEq(reserveInfo.totalBorrowed, borrowAmount);
-        assertEq(reserveInfo.inBorrowing, 0);
+        assertEq(reserveInfo.debt, borrowAmount);
+        assertEq(reserveInfo.claimableUSDT, 0);
         skip(365 days);
 
         mockUSDT.approve(address(poolManager), borrowAmount);
@@ -594,8 +594,8 @@ contract PoolManagerTest is Test {
         DataTypes.UserPoolReserveInformation memory reserveInfo = poolManager
             .getUserPoolReserveInformation(user);
 
-        assertEq(reserveInfo.totalBorrowed, borrowAmount);
-        assertEq(reserveInfo.inBorrowing, 0);
+        assertEq(reserveInfo.debt, borrowAmount);
+        assertEq(reserveInfo.claimableUSDT, 0);
         skip(365 days);
 
         mockUSDT.approve(address(poolManager), borrowAmount);
@@ -609,7 +609,7 @@ contract PoolManagerTest is Test {
 
         DataTypes.PoolManagerConfig memory config = DataTypes
             .PoolManagerConfig({
-                DEFAULT_MAX_WITHDRAW_RATE: 5000,
+                DEFAULT_LIQUIDATION_THRESHOLD: 5000,
                 DEFAULT_POOL_INTEREST_RATE: 500,
                 DEFAULT_LTV: 500,
                 PROTOCAL_FEE_INTEREST_RATE: 100,

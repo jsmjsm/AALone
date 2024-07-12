@@ -18,7 +18,7 @@ contract DeployMyContract is Script {
         address fbtc1Address = vm.envAddress("FBTC1"); // Replace with actual address
         address avalonUSDTVault = vm.envAddress("AVALON_USDT_VAULT");
         address antaphaUSDTVault = vm.envAddress("ANTAPHA_USDT_VAULT");
-        uint256 DEFAULT_MAX_WITHDRAW_RATE = 5000; // Example value
+        uint256 DEFAULT_LIQUIDATION_THRESHOLD = 5000; // Example value
         uint256 DEFAULT_POOL_INTEREST_RATE = 1000; // Example value
         uint256 DEFAULT_LTV = 7500;
         uint256 PROTOCAL_FEE_INTEREST_RATE = 100; // Example value
@@ -48,7 +48,7 @@ contract DeployMyContract is Script {
 
         DataTypes.PoolManagerConfig memory poolManagerConfig = DataTypes
             .PoolManagerConfig({
-                DEFAULT_MAX_WITHDRAW_RATE: DEFAULT_MAX_WITHDRAW_RATE,
+                DEFAULT_LIQUIDATION_THRESHOLD: DEFAULT_LIQUIDATION_THRESHOLD,
                 DEFAULT_POOL_INTEREST_RATE: DEFAULT_POOL_INTEREST_RATE,
                 DEFAULT_LTV: DEFAULT_LTV,
                 PROTOCAL_FEE_INTEREST_RATE: PROTOCAL_FEE_INTEREST_RATE,

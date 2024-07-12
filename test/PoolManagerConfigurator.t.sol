@@ -27,7 +27,7 @@ contract PoolManagerStorageTest is Test {
         vm.startPrank(admin);
         DataTypes.PoolManagerConfig memory config = DataTypes
             .PoolManagerConfig({
-                DEFAULT_MAX_WITHDRAW_RATE: 5000,
+                DEFAULT_LIQUIDATION_THRESHOLD: 5000,
                 DEFAULT_POOL_INTEREST_RATE: 500,
                 DEFAULT_LTV: 500,
                 PROTOCAL_FEE_INTEREST_RATE: 100,
@@ -61,7 +61,7 @@ contract PoolManagerStorageTest is Test {
 
         DataTypes.PoolManagerConfig memory config = DataTypes
             .PoolManagerConfig({
-                DEFAULT_MAX_WITHDRAW_RATE: 5000,
+                DEFAULT_LIQUIDATION_THRESHOLD: 5000,
                 DEFAULT_POOL_INTEREST_RATE: 500,
                 DEFAULT_LTV: 500,
                 PROTOCAL_FEE_INTEREST_RATE: 100,
@@ -85,7 +85,7 @@ contract PoolManagerStorageTest is Test {
             init: true,
             interestRate: 500,
             loanToValue: 8000,
-            maxWithdrawRate: 5000
+            liquidationThreshold: 5000
         });
 
         poolManagerConfigurator.setUserPoolConfig(user, userConfig);
@@ -97,7 +97,7 @@ contract PoolManagerStorageTest is Test {
         assertTrue(storedUserConfig.init);
         assertEq(storedUserConfig.interestRate, 500);
         assertEq(storedUserConfig.loanToValue, 8000);
-        assertEq(storedUserConfig.maxWithdrawRate, 5000);
+        assertEq(storedUserConfig.liquidationThreshold, 5000);
 
         vm.stopPrank();
     }

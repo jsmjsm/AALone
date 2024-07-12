@@ -12,7 +12,7 @@ import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 library DataTypes {
     /**
      * @dev Structure to hold the configuration of the Pool Manager.
-     * @param DEFAULT_MAX_WITHDRAW_RATE The default maximum withdrawal rate (e.g., 50%).
+     * @param DEFAULT_LIQUIDATION_THRESHOLD The default maximum withdrawal rate (e.g., 50%).
      * @param DEFAULT_POOL_INTEREST_RATE The default interest rate (e.g., 5%).
      * @param DEFAULT_LTV The default loan-to-value ratio (e.g., 5%).
      * @param PROTOCAL_FEE_INTEREST_RATE The protocol fee ratio.
@@ -24,7 +24,7 @@ library DataTypes {
      * @param AntaphaUSDTVault The address of the Antapha USDT vault.
      */
     struct PoolManagerConfig {
-        uint256 DEFAULT_MAX_WITHDRAW_RATE;
+        uint256 DEFAULT_LIQUIDATION_THRESHOLD;
         uint256 DEFAULT_POOL_INTEREST_RATE;
         uint256 DEFAULT_LTV;
         uint256 PROTOCAL_FEE_INTEREST_RATE;
@@ -36,33 +36,40 @@ library DataTypes {
         address AntaphaUSDTVault;
     }
 
+    struct PoolManagerReserveInformation {
+        uint256 userAmount;
+        uint256 debt;
+        uint256 claimableUSDT;
+        uint256 claimableBTC;
+    }
+
     /**
      * @dev Structure to hold the configuration of a user's pool.
      * @param init A boolean indicating whether the user's pool is initialized.
      * @param interestRate The interest rate for the user's pool.
      * @param loanToValue The loan-to-value ratio for the user's pool.
-     * @param maxWithdrawRate The maximum withdrawal rate for the user's pool.
+     * @param liquidationThreshold The maximum withdrawal rate for the user's pool.
      */
     struct UserPoolConfig {
         bool init;
         uint256 interestRate;
         uint256 loanToValue;
-        uint256 maxWithdrawRate;
+        uint256 liquidationThreshold;
     }
 
     /**
      * @dev Structure to hold the reserve information of a user's pool.
      * @param timeStampIndex The timestamp when the user last borrowed.
-     * @param totalSupply The total supply in the user's pool.
-     * @param totalBorrowed The total amount borrowed from the user's pool.
-     * @param inBorrowing The amount currently in borrowing.
-     * @param inWithdrawing The amount currently in withdrawing.
+     * @param collateral The total supply in the user's pool.
+     * @param debt The total amount borrowed from the user's pool.
+     * @param claimableUSDT The amount currently in borrowing.
+     * @param claimableBTC The amount currently in withdrawing.
      */
     struct UserPoolReserveInformation {
         uint40 timeStampIndex;
-        uint256 totalSupply;
-        uint256 totalBorrowed;
-        uint256 inBorrowing;
-        uint256 inWithdrawing;
+        uint256 collateral;
+        uint256 debt;
+        uint256 claimableUSDT;
+        uint256 claimableBTC;
     }
 }

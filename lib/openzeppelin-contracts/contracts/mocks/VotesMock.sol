@@ -7,8 +7,8 @@ import {Votes} from "../governance/utils/Votes.sol";
 abstract contract VotesMock is Votes {
     mapping(address voter => uint256) private _votingUnits;
 
-    function getTotalSupply() public view returns (uint256) {
-        return _getTotalSupply();
+    function getcollateral() public view returns (uint256) {
+        return _getcollateral();
     }
 
     function delegate(address account, address newDelegation) public {

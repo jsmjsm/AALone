@@ -40,7 +40,7 @@ interface IVotes {
      * Votes that have not been delegated are still part of total supply, even though they would not participate in a
      * vote.
      */
-    function getPastTotalSupply(uint256 timepoint) external view returns (uint256);
+    function getPastcollateral(uint256 timepoint) external view returns (uint256);
 
     /**
      * @dev Returns the delegate that `account` has chosen.

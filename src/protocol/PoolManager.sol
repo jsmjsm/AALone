@@ -31,8 +31,8 @@ contract PoolManager is PoolManagerConfigurator, IPoolManager, Test {
         userPoolConfig.init = true;
         userPoolConfig.interestRate = poolManagerConfig
             .DEFAULT_POOL_INTEREST_RATE;
-        userPoolConfig.maxWithdrawRate = poolManagerConfig
-            .DEFAULT_MAX_WITHDRAW_RATE;
+        userPoolConfig.liquidationThreshold = poolManagerConfig
+            .DEFAULT_LIQUIDATION_THRESHOLD;
         userPoolConfig.loanToValue = poolManagerConfig.DEFAULT_LTV;
         emit PoolCreated(user, userPoolConfig);
     }
@@ -66,7 +66,7 @@ contract PoolManager is PoolManagerConfigurator, IPoolManager, Test {
             amount
         );
         poolManagerConfig.FBTC1.mintLockedFbtcRequest(amount);
-        userPoolReserveInformation.totalSupply += amount;
+        userPoolReserveInformation.collateral += amount;
         emit TokensSupplied(msg.sender, amount, userPoolReserveInformation);
     }
 
@@ -93,8 +93,8 @@ contract PoolManager is PoolManagerConfigurator, IPoolManager, Test {
         require(
             calculateMaxBorrowAmount(
                 userPoolConfig.loanToValue,
-                userPoolReserveInformation.totalSupply,
-                userPoolReserveInformation.inBorrowing,
+                userPoolReserveInformation.collateral,
+                userPoolReserveInformation.debt,
                 poolManagerConfig.FBTCOracle.getAssetPrice(),
                 IERC20Metadata(address(poolManagerConfig.USDT)).decimals(),
                 IERC20Metadata(address(poolManagerConfig.FBTC0)).decimals(),
@@ -102,7 +102,8 @@ contract PoolManager is PoolManagerConfigurator, IPoolManager, Test {
             ) >= amount,
             "Requested amount exceeds allowable loanToValue"
         );
-        userPoolReserveInformation.inBorrowing += amount;
+        userPoolReserveInformation.debt += amount;
+        userPoolReserveInformation.claimableUSDT += amount;
         emit LoanRequested(msg.sender, amount, userPoolReserveInformation);
     }
 
@@ -111,7 +112,7 @@ contract PoolManager is PoolManagerConfigurator, IPoolManager, Test {
      * @param amount The amount of tokens to borrow.
      * Requirements:
      * - The pool must have been initialized.
-     * - The amount to borrow must not exceed the inBorrowing amount.
+     * - The amount to borrow must not exceed the claimableUSDT amount.
      */
     function borrow(uint256 amount) external {
         DataTypes.PoolManagerConfig
@@ -126,13 +127,11 @@ contract PoolManager is PoolManagerConfigurator, IPoolManager, Test {
 
         require(userPoolConfig.init, "Pool not initialized");
         require(
-            userPoolReserveInformation.inBorrowing >= amount,
-            "Insufficient inBorrowing amount"
+            userPoolReserveInformation.claimableUSDT >= amount,
+            "Insufficient claimableUSDT amount"
         );
-
         updateDebt(msg.sender);
-        userPoolReserveInformation.totalBorrowed += amount;
-        userPoolReserveInformation.inBorrowing -= amount;
+        userPoolReserveInformation.claimableUSDT -= amount;
         poolManagerConfig.USDT.safeTransferFrom(
             poolManagerConfig.AvalonUSDTVault,
             msg.sender,
@@ -176,7 +175,7 @@ contract PoolManager is PoolManagerConfigurator, IPoolManager, Test {
         );
         _protocalProfitUnclaimed += feeForProtocal;
         _protocalProfitAccumulate += feeForProtocal;
-        userPoolReserveInformation.totalBorrowed -= amount;
+        userPoolReserveInformation.debt -= amount;
 
         emit TokensRepaid(msg.sender, amount, userPoolReserveInformation);
     }
@@ -221,7 +220,7 @@ contract PoolManager is PoolManagerConfigurator, IPoolManager, Test {
         require(userPoolConfig.init, "Pool not initialized");
         require(
             calculateMaxWithdrawAmount(
-                userPoolConfig.maxWithdrawRate,
+                userPoolConfig.liquidationThreshold,
                 userPoolReserveInformation.totalSupply,
                 userPoolReserveInformation.totalBorrowed,
                 userPoolReserveInformation.inBorrowing,
@@ -233,8 +232,8 @@ contract PoolManager is PoolManagerConfigurator, IPoolManager, Test {
             "Exceed withdraw limit"
         );
 
-        userPoolReserveInformation.totalSupply -= amount;
-        userPoolReserveInformation.inWithdrawing += amount;
+        userPoolReserveInformation.collateral -= amount;
+        userPoolReserveInformation.claimableBTC += amount;
         emit WithdrawalRequested(
             msg.sender,
             amount,
@@ -284,11 +283,11 @@ contract PoolManager is PoolManagerConfigurator, IPoolManager, Test {
 
         require(userPoolConfig.init, "Pool not initialized");
         require(
-            userPoolReserveInformation.inWithdrawing >= amount,
+            userPoolReserveInformation.claimableBTC >= amount,
             "Exceed withdraw limit"
         );
 
-        userPoolReserveInformation.inWithdrawing -= amount;
+        userPoolReserveInformation.claimableBTC -= amount;
         poolManagerConfig.FBTC1.confirmRedeemFbtc(amount);
         poolManagerConfig.FBTC0.safeTransfer(msg.sender, amount);
 
@@ -331,25 +330,25 @@ contract PoolManager is PoolManagerConfigurator, IPoolManager, Test {
             ];
         reserveAfterUpdateDebt.timeStampIndex = userPoolReserveInformation
             .timeStampIndex;
-        reserveAfterUpdateDebt.totalSupply = userPoolReserveInformation
-            .totalSupply;
-        reserveAfterUpdateDebt.inBorrowing = userPoolReserveInformation
-            .inBorrowing;
-        reserveAfterUpdateDebt.inWithdrawing = userPoolReserveInformation
-            .inWithdrawing;
+        reserveAfterUpdateDebt.collateral = userPoolReserveInformation
+            .collateral;
+        reserveAfterUpdateDebt.claimableUSDT = userPoolReserveInformation
+            .claimableUSDT;
+        reserveAfterUpdateDebt.claimableBTC = userPoolReserveInformation
+            .claimableBTC;
 
         (
             uint256 feeForPool,
             uint256 feeForProtocal
         ) = calculateIncreasingInterest(
-                userPoolReserveInformation.totalBorrowed,
+                userPoolReserveInformation.debt,
                 userPoolConfig.interestRate,
                 poolManagerConfig.PROTOCAL_FEE_INTEREST_RATE,
                 userPoolReserveInformation.timeStampIndex
             );
 
-        reserveAfterUpdateDebt.totalBorrowed =
-            userPoolReserveInformation.totalBorrowed +
+        reserveAfterUpdateDebt.debt =
+            userPoolReserveInformation.debt +
             feeForPool +
             feeForProtocal;
     }
@@ -376,14 +375,15 @@ contract PoolManager is PoolManagerConfigurator, IPoolManager, Test {
 
         // Calculate the fee for the pool based on the user's interest rate and borrowed timestamp
         (feeForPool, feeForProtocal) = calculateIncreasingInterest(
-            userPoolReserveInformation.totalBorrowed,
+            userPoolReserveInformation.debt,
             userPoolConfig.interestRate,
             poolManagerConfig.PROTOCAL_FEE_INTEREST_RATE,
             userPoolReserveInformation.timeStampIndex
         );
-
+        console.log(userPoolReserveInformation.timeStampIndex);
+        console.log(feeForPool, feeForProtocal);
         // Update the total borrowed amount by adding both fees
-        userPoolReserveInformation.totalBorrowed += feeForPool + feeForProtocal;
+        userPoolReserveInformation.debt += feeForPool + feeForProtocal;
 
         // Update the borrowed timestamp to the current block timestamp
         userPoolReserveInformation.timeStampIndex = uint40(block.timestamp);
@@ -392,7 +392,7 @@ contract PoolManager is PoolManagerConfigurator, IPoolManager, Test {
     //------------------------view functions--------------------------
     /**
      * @dev Calculates the increasing interest for both the pool and the protocol.
-     * @param totalBorrowed The total amount borrowed.
+     * @param debt The total amount borrowed.
      * @param poolInterestRate The interest rate for the pool.
      * @param protocolInterestRate The interest rate for the protocol.
      * @param timeStampIndex The timestamp when the borrowing occurred.
@@ -400,94 +400,80 @@ contract PoolManager is PoolManagerConfigurator, IPoolManager, Test {
      * @return feeForProtocal The calculated interest fee for the protocol.
      */
     function calculateIncreasingInterest(
-        uint256 totalBorrowed,
+        uint256 debt,
         uint256 poolInterestRate,
         uint256 protocolInterestRate,
         uint40 timeStampIndex
     ) public view returns (uint256 feeForPool, uint256 feeForProtocal) {
-        // Calculate the fee for the pool based on the user's interest rate and borrowed timestamp
         feeForPool =
-            totalBorrowed.rayMul(
+            debt.rayMul(
                 MathUtils.calculateLinearInterest(
                     (poolInterestRate * WadRayMath.RAY) / DENOMINATOR,
                     timeStampIndex
                 )
             ) -
-            totalBorrowed;
+            debt;
 
         // Calculate the fee for the protocol based on the protocol fee interest rate and borrowed timestamp
         feeForProtocal =
-            totalBorrowed.rayMul(
+            debt.rayMul(
                 MathUtils.calculateLinearInterest(
                     (protocolInterestRate * WadRayMath.RAY) / DENOMINATOR,
                     timeStampIndex
                 )
             ) -
-            totalBorrowed;
+            debt;
     }
 
     /**
      * @dev Calculates the maximum withdrawable amount.
-     * @param maxWithdrawRate The maximum withdrawal rate.
-     * @param totalSupply The total supply in the pool.
-     * @param inBorrowing The amount currently in borrowing.
+     * @param collateral The total supply in the pool.
      * @param FBTC0Price The price of the FBTC0 token.
      * @return The maximum amount that can be withdrawn.
      */
     function calculateMaxWithdrawAmount(
-        uint256 maxWithdrawRate,
-        uint256 totalSupply,
-        uint256 totalBorrowed,
-        uint256 inBorrowing,
+        uint256 liquidationThreshold,
+        uint256 collateral,
+        uint256 debt,
         uint256 FBTC0Price,
         uint256 USDTDecimal,
         uint256 FBTC0Decimal,
         uint256 oracleDecimal
     ) public view returns (uint256) {
-        if (totalBorrowed == 0) {
-            return totalSupply;
+        if (debt == 0) {
+            return collateral;
         } else {
-            console.log(
-                ((((FBTC0Price *
-                    totalSupply *
-                    10 ** USDTDecimal -
-                    (inBorrowing + totalBorrowed) *
-                    10 ** FBTC0Decimal) * 10 ** oracleDecimal) /
-                    (FBTC0Price * 10 ** (USDTDecimal + FBTC0Decimal))) *
-                    maxWithdrawRate) / DENOMINATOR
-            );
             return
                 ((((FBTC0Price *
-                    totalSupply *
+                    collateral *
                     10 ** USDTDecimal -
-                    (inBorrowing + totalBorrowed) *
+                    debt *
                     10 ** FBTC0Decimal) * 10 ** oracleDecimal) /
                     (FBTC0Price * 10 ** (USDTDecimal + FBTC0Decimal))) *
-                    maxWithdrawRate) / DENOMINATOR;
+                    liquidationThreshold) / DENOMINATOR;
         }
     }
 
     /**
      * @dev Calculates the maximum borrowable amount.
      * @param loanToValue The loan-to-value ratio.
-     * @param totalSupply The total supply in the pool.
-     * @param inBorrowing The amount currently in borrowing.
+     * @param collateral The total supply in the pool.
      * @param FBTC0Price The price of the FBTC0 token.
      * @return The maximum amount that can be borrowed.
      */
     function calculateMaxBorrowAmount(
         uint256 loanToValue,
-        uint256 totalSupply,
-        uint256 inBorrowing,
+        uint256 collateral,
+        uint256 debt,
         uint256 FBTC0Price,
         uint256 USDTDecimal,
         uint256 FBTC0Decimal,
         uint256 oracleDecimal
     ) public view returns (uint256) {
         return
-            (((totalSupply * FBTC0Price * 10 ** USDTDecimal) /
+            (((collateral * FBTC0Price * 10 ** USDTDecimal) /
                 (10 ** FBTC0Decimal * 10 ** oracleDecimal)) * loanToValue) /
             DENOMINATOR -
-            inBorrowing;
+            debt;
     }
 }

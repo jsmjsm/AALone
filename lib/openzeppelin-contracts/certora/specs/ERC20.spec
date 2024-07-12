@@ -19,7 +19,7 @@ ghost mathint sumOfBalances {
 
 // Because `balance` has a uint256 type, any balance addition in CVL1 behaved as a `require_uint256()` casting,
 // leaving out the possibility of overflow. This is not the case in CVL2 where casting became more explicit.
-// A counterexample in CVL2 is having an initial state where Alice initial balance is larger than totalSupply, which 
+// A counterexample in CVL2 is having an initial state where Alice initial balance is larger than collateral, which 
 // overflows Alice's balance when receiving a transfer. This is not possible unless the contract is deployed into an 
 // already used address (or upgraded from corrupted state).
 // We restrict such behavior by making sure no balance is greater than the sum of balances.
@@ -33,11 +33,11 @@ hook Sstore _balances[KEY address addr] uint256 newValue (uint256 oldValue) STOR
 
 /*
 ┌─────────────────────────────────────────────────────────────────────────────────────────────────────────────────────┐
-│ Invariant: totalSupply is the sum of all balances                                                                   │
+│ Invariant: collateral is the sum of all balances                                                                   │
 └─────────────────────────────────────────────────────────────────────────────────────────────────────────────────────┘
 */
-invariant totalSupplyIsSumOfBalances()
-    to_mathint(totalSupply()) == sumOfBalances;
+invariant collateralIsSumOfBalances()
+    to_mathint(collateral()) == sumOfBalances;
 
 /*
 ┌─────────────────────────────────────────────────────────────────────────────────────────────────────────────────────┐
@@ -52,18 +52,18 @@ invariant zeroAddressNoBalance()
 │ Rules: only mint and burn can change total supply                                                                   │
 └─────────────────────────────────────────────────────────────────────────────────────────────────────────────────────┘
 */
-rule noChangeTotalSupply(env e) {
-    requireInvariant totalSupplyIsSumOfBalances();
+rule noChangecollateral(env e) {
+    requireInvariant collateralIsSumOfBalances();
 
     method f;
     calldataarg args;
 
-    uint256 totalSupplyBefore = totalSupply();
+    uint256 collateralBefore = collateral();
     f(e, args);
-    uint256 totalSupplyAfter = totalSupply();
+    uint256 collateralAfter = collateral();
 
-    assert totalSupplyAfter > totalSupplyBefore => f.selector == sig:mint(address,uint256).selector;
-    assert totalSupplyAfter < totalSupplyBefore => f.selector == sig:burn(address,uint256).selector;
+    assert collateralAfter > collateralBefore => f.selector == sig:mint(address,uint256).selector;
+    assert collateralAfter < collateralBefore => f.selector == sig:burn(address,uint256).selector;
 }
 
 /*
@@ -72,7 +72,7 @@ rule noChangeTotalSupply(env e) {
 └─────────────────────────────────────────────────────────────────────────────────────────────────────────────────────┘
 */
 rule onlyAuthorizedCanTransfer(env e) {
-    requireInvariant totalSupplyIsSumOfBalances();
+    requireInvariant collateralIsSumOfBalances();
 
     method f;
     calldataarg args;
@@ -98,7 +98,7 @@ rule onlyAuthorizedCanTransfer(env e) {
 └─────────────────────────────────────────────────────────────────────────────────────────────────────────────────────┘
 */
 rule onlyHolderOfSpenderCanChangeAllowance(env e) {
-    requireInvariant totalSupplyIsSumOfBalances();
+    requireInvariant collateralIsSumOfBalances();
 
     method f;
     calldataarg args;
@@ -131,7 +131,7 @@ rule onlyHolderOfSpenderCanChangeAllowance(env e) {
 └─────────────────────────────────────────────────────────────────────────────────────────────────────────────────────┘
 */
 rule mint(env e) {
-    requireInvariant totalSupplyIsSumOfBalances();
+    requireInvariant collateralIsSumOfBalances();
     require nonpayable(e);
 
     address to;
@@ -141,18 +141,18 @@ rule mint(env e) {
     // cache state
     uint256 toBalanceBefore    = balanceOf(to);
     uint256 otherBalanceBefore = balanceOf(other);
-    uint256 totalSupplyBefore  = totalSupply();
+    uint256 collateralBefore  = collateral();
 
     // run transaction
     mint@withrevert(e, to, amount);
 
     // check outcome
     if (lastReverted) {
-        assert to == 0 || totalSupplyBefore + amount > max_uint256;
+        assert to == 0 || collateralBefore + amount > max_uint256;
     } else {
-        // updates balance and totalSupply
+        // updates balance and collateral
         assert to_mathint(balanceOf(to)) == toBalanceBefore   + amount;
-        assert to_mathint(totalSupply()) == totalSupplyBefore + amount;
+        assert to_mathint(collateral()) == collateralBefore + amount;
 
         // no other balance is modified
         assert balanceOf(other) != otherBalanceBefore => other == to;
@@ -165,7 +165,7 @@ rule mint(env e) {
 └─────────────────────────────────────────────────────────────────────────────────────────────────────────────────────┘
 */
 rule burn(env e) {
-    requireInvariant totalSupplyIsSumOfBalances();
+    requireInvariant collateralIsSumOfBalances();
     require nonpayable(e);
 
     address from;
@@ -175,7 +175,7 @@ rule burn(env e) {
     // cache state
     uint256 fromBalanceBefore  = balanceOf(from);
     uint256 otherBalanceBefore = balanceOf(other);
-    uint256 totalSupplyBefore  = totalSupply();
+    uint256 collateralBefore  = collateral();
 
     // run transaction
     burn@withrevert(e, from, amount);
@@ -184,9 +184,9 @@ rule burn(env e) {
     if (lastReverted) {
         assert from == 0 || fromBalanceBefore < amount;
     } else {
-        // updates balance and totalSupply
+        // updates balance and collateral
         assert to_mathint(balanceOf(from)) == fromBalanceBefore   - amount;
-        assert to_mathint(totalSupply())   == totalSupplyBefore - amount;
+        assert to_mathint(collateral())   == collateralBefore - amount;
 
         // no other balance is modified
         assert balanceOf(other) != otherBalanceBefore => other == from;
@@ -199,7 +199,7 @@ rule burn(env e) {
 └─────────────────────────────────────────────────────────────────────────────────────────────────────────────────────┘
 */
 rule transfer(env e) {
-    requireInvariant totalSupplyIsSumOfBalances();
+    requireInvariant collateralIsSumOfBalances();
     require nonpayable(e);
 
     address holder = e.msg.sender;
@@ -234,7 +234,7 @@ rule transfer(env e) {
 └─────────────────────────────────────────────────────────────────────────────────────────────────────────────────────┘
 */
 rule transferFrom(env e) {
-    requireInvariant totalSupplyIsSumOfBalances();
+    requireInvariant collateralIsSumOfBalances();
     require nonpayable(e);
 
     address spender = e.msg.sender;

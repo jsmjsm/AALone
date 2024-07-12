@@ -79,7 +79,7 @@ abstract contract ERC20Wrapper is ERC20 {
      * function that can be exposed with access control if desired.
      */
     function _recover(address account) internal virtual returns (uint256) {
-        uint256 value = _underlying.balanceOf(address(this)) - totalSupply();
+        uint256 value = _underlying.balanceOf(address(this)) - collateral();
         _mint(account, value);
         return value;
     }

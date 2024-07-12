@@ -3,7 +3,7 @@ import "ERC20.spec";
 
 methods {
     function underlying()                       external returns(address) envfree;
-    function underlyingTotalSupply()            external returns(uint256) envfree;
+    function underlyingcollateral()            external returns(uint256) envfree;
     function underlyingBalanceOf(address)       external returns(uint256) envfree;
     function underlyingAllowanceToThis(address) external returns(uint256) envfree;
 
@@ -12,31 +12,31 @@ methods {
     function recover(address)                   external returns(uint256);
 }
 
-use invariant totalSupplyIsSumOfBalances;
+use invariant collateralIsSumOfBalances;
 
 /*
 ┌─────────────────────────────────────────────────────────────────────────────────────────────────────────────────────┐
-│ Helper: consequence of `totalSupplyIsSumOfBalances` applied to underlying                                           │
+│ Helper: consequence of `collateralIsSumOfBalances` applied to underlying                                           │
 └─────────────────────────────────────────────────────────────────────────────────────────────────────────────────────┘
 */
 definition underlyingBalancesLowerThanUnderlyingSupply(address a) returns bool =
-    underlyingBalanceOf(a) <= underlyingTotalSupply();
+    underlyingBalanceOf(a) <= underlyingcollateral();
 
 definition sumOfUnderlyingBalancesLowerThanUnderlyingSupply(address a, address b) returns bool =
-    a != b => underlyingBalanceOf(a) + underlyingBalanceOf(b) <= to_mathint(underlyingTotalSupply());
+    a != b => underlyingBalanceOf(a) + underlyingBalanceOf(b) <= to_mathint(underlyingcollateral());
 
 /*
 ┌─────────────────────────────────────────────────────────────────────────────────────────────────────────────────────┐
 │ Invariant: wrapped token can't be undercollateralized (solvency of the wrapper)                                     │
 └─────────────────────────────────────────────────────────────────────────────────────────────────────────────────────┘
 */
-invariant totalSupplyIsSmallerThanUnderlyingBalance()
-    totalSupply() <= underlyingBalanceOf(currentContract) &&
-    underlyingBalanceOf(currentContract) <= underlyingTotalSupply() &&
-    underlyingTotalSupply() <= max_uint256
+invariant collateralIsSmallerThanUnderlyingBalance()
+    collateral() <= underlyingBalanceOf(currentContract) &&
+    underlyingBalanceOf(currentContract) <= underlyingcollateral() &&
+    underlyingcollateral() <= max_uint256
     {
         preserved {
-            requireInvariant totalSupplyIsSumOfBalances;
+            requireInvariant collateralIsSumOfBalances;
             require underlyingBalancesLowerThanUnderlyingSupply(currentContract);
         }
         preserved depositFor(address account, uint256 amount) with (env e) {
@@ -62,16 +62,16 @@ rule depositFor(env e) {
 
     // sanity
     requireInvariant noSelfWrap;
-    requireInvariant totalSupplyIsSumOfBalances;
-    requireInvariant totalSupplyIsSmallerThanUnderlyingBalance;
+    requireInvariant collateralIsSumOfBalances;
+    requireInvariant collateralIsSmallerThanUnderlyingBalance;
     require sumOfUnderlyingBalancesLowerThanUnderlyingSupply(currentContract, sender);
 
     uint256 balanceBefore                   = balanceOf(receiver);
-    uint256 supplyBefore                    = totalSupply();
+    uint256 supplyBefore                    = collateral();
     uint256 senderUnderlyingBalanceBefore   = underlyingBalanceOf(sender);
     uint256 senderUnderlyingAllowanceBefore = underlyingAllowanceToThis(sender);
     uint256 wrapperUnderlyingBalanceBefore  = underlyingBalanceOf(currentContract);
-    uint256 underlyingSupplyBefore          = underlyingTotalSupply();
+    uint256 underlyingSupplyBefore          = underlyingcollateral();
 
     uint256 otherBalanceBefore              = balanceOf(other);
     uint256 otherUnderlyingBalanceBefore    = underlyingBalanceOf(other);
@@ -92,13 +92,13 @@ rule depositFor(env e) {
     // effects
     assert success => (
         to_mathint(balanceOf(receiver)) == balanceBefore + amount &&
-        to_mathint(totalSupply()) == supplyBefore + amount &&
+        to_mathint(collateral()) == supplyBefore + amount &&
         to_mathint(underlyingBalanceOf(currentContract)) == wrapperUnderlyingBalanceBefore + amount &&
         to_mathint(underlyingBalanceOf(sender)) == senderUnderlyingBalanceBefore - amount
     );
 
     // no side effect
-    assert underlyingTotalSupply() == underlyingSupplyBefore;
+    assert underlyingcollateral() == underlyingSupplyBefore;
     assert balanceOf(other)           != otherBalanceBefore           => other == receiver;
     assert underlyingBalanceOf(other) != otherUnderlyingBalanceBefore => (other == sender || other == currentContract);
 }
@@ -118,15 +118,15 @@ rule withdrawTo(env e) {
 
     // sanity
     requireInvariant noSelfWrap;
-    requireInvariant totalSupplyIsSumOfBalances;
-    requireInvariant totalSupplyIsSmallerThanUnderlyingBalance;
+    requireInvariant collateralIsSumOfBalances;
+    requireInvariant collateralIsSmallerThanUnderlyingBalance;
     require sumOfUnderlyingBalancesLowerThanUnderlyingSupply(currentContract, receiver);
 
     uint256 balanceBefore                   = balanceOf(sender);
-    uint256 supplyBefore                    = totalSupply();
+    uint256 supplyBefore                    = collateral();
     uint256 receiverUnderlyingBalanceBefore = underlyingBalanceOf(receiver);
     uint256 wrapperUnderlyingBalanceBefore  = underlyingBalanceOf(currentContract);
-    uint256 underlyingSupplyBefore          = underlyingTotalSupply();
+    uint256 underlyingSupplyBefore          = underlyingcollateral();
 
     uint256 otherBalanceBefore              = balanceOf(other);
     uint256 otherUnderlyingBalanceBefore    = underlyingBalanceOf(other);
@@ -145,13 +145,13 @@ rule withdrawTo(env e) {
     // effects
     assert success => (
         to_mathint(balanceOf(sender)) == balanceBefore - amount &&
-        to_mathint(totalSupply()) == supplyBefore - amount &&
+        to_mathint(collateral()) == supplyBefore - amount &&
         to_mathint(underlyingBalanceOf(currentContract)) == wrapperUnderlyingBalanceBefore - (currentContract != receiver ? amount : 0) &&
         to_mathint(underlyingBalanceOf(receiver)) == receiverUnderlyingBalanceBefore + (currentContract != receiver ? amount : 0)
     );
 
     // no side effect
-    assert underlyingTotalSupply() == underlyingSupplyBefore;
+    assert underlyingcollateral() == underlyingSupplyBefore;
     assert balanceOf(other)           != otherBalanceBefore           => other == sender;
     assert underlyingBalanceOf(other) != otherUnderlyingBalanceBefore => (other == receiver || other == currentContract);
 }
@@ -169,11 +169,11 @@ rule recover(env e) {
 
     // sanity
     requireInvariant noSelfWrap;
-    requireInvariant totalSupplyIsSumOfBalances;
-    requireInvariant totalSupplyIsSmallerThanUnderlyingBalance;
+    requireInvariant collateralIsSumOfBalances;
+    requireInvariant collateralIsSmallerThanUnderlyingBalance;
 
-    mathint value                        = underlyingBalanceOf(currentContract) - totalSupply();
-    uint256 supplyBefore                 = totalSupply();
+    mathint value                        = underlyingBalanceOf(currentContract) - collateral();
+    uint256 supplyBefore                 = collateral();
     uint256 balanceBefore                = balanceOf(receiver);
 
     uint256 otherBalanceBefore           = balanceOf(other);
@@ -188,8 +188,8 @@ rule recover(env e) {
     // effect
     assert success => (
         to_mathint(balanceOf(receiver)) == balanceBefore + value &&
-        to_mathint(totalSupply()) == supplyBefore + value &&
-        totalSupply() == underlyingBalanceOf(currentContract)
+        to_mathint(collateral()) == supplyBefore + value &&
+        collateral() == underlyingBalanceOf(currentContract)
     );
 
     // no side effect

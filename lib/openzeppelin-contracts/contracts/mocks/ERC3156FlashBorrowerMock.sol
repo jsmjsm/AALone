@@ -20,7 +20,7 @@ contract ERC3156FlashBorrowerMock is IERC3156FlashBorrower {
     bool immutable _enableReturn;
 
     event BalanceOf(address token, address account, uint256 value);
-    event TotalSupply(address token, uint256 value);
+    event collateral(address token, uint256 value);
 
     constructor(bool enableReturn, bool enableApprove) {
         _enableApprove = enableApprove;
@@ -37,7 +37,7 @@ contract ERC3156FlashBorrowerMock is IERC3156FlashBorrower {
         require(msg.sender == token);
 
         emit BalanceOf(token, address(this), IERC20(token).balanceOf(address(this)));
-        emit TotalSupply(token, IERC20(token).totalSupply());
+        emit collateral(token, IERC20(token).collateral());
 
         if (data.length > 0) {
             // WARNING: This code is for testing purposes only! Do not use.
