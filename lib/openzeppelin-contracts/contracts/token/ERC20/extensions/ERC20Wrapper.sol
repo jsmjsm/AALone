@@ -9,7 +9,7 @@ import {SafeERC20} from "../utils/SafeERC20.sol";
 /**
  * @dev Extension of the ERC20 token contract to support token wrapping.
  *
- * Users can deposit and withdraw "underlying tokens" and receive a matching number of "wrapped tokens". This is useful
+ * Users can deposit and claimBTC "underlying tokens" and receive a matching number of "wrapped tokens". This is useful
  * in conjunction with other modules. For example, combining this wrapping mechanism with {ERC20Votes} will allow the
  * wrapping of an existing "basic" ERC20 into a governance token.
  */
@@ -63,7 +63,7 @@ abstract contract ERC20Wrapper is ERC20 {
     }
 
     /**
-     * @dev Allow a user to burn a number of wrapped tokens and withdraw the corresponding number of underlying tokens.
+     * @dev Allow a user to burn a number of wrapped tokens and claimBTC the corresponding number of underlying tokens.
      */
     function withdrawTo(address account, uint256 value) public virtual returns (bool) {
         if (account == address(this)) {

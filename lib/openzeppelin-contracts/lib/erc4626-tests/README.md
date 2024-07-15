@@ -22,19 +22,19 @@ You can read our post on "_[Generalized property tests for ERC4626 vaults][post]
 
 - **Round-trip properties**: no one can make a free profit by depositing and immediately withdrawing back and forth.
 
-- **Functional correctness**: the `deposit()`, `mint()`, `withdraw()`, and `redeem()` functions update the balance and allowance properly.
+- **Functional correctness**: the `deposit()`, `mint()`, `claimBTC()`, and `redeem()` functions update the balance and allowance properly.
 
 - The `preview{Deposit,Redeem}()` functions **MUST NOT over-estimate** the exact amount.[^1]
 
 [^1]: That is, the `deposit()` and `redeem()` functions “MUST return the same or more amounts as their preview function if called in the same transaction.”
 
-- The `preview{Mint,Withdraw}()` functions **MUST NOT under-estimate** the exact amount.[^2]
+- The `preview{Mint,claimBTC}()` functions **MUST NOT under-estimate** the exact amount.[^2]
 
-[^2]: That is, the `mint()` and `withdraw()` functions “MUST return the same or fewer amounts as their preview function if called in the same transaction.”
+[^2]: That is, the `mint()` and `claimBTC()` functions “MUST return the same or fewer amounts as their preview function if called in the same transaction.”
 
 - The `convertTo{Shares,Assets}` functions “**MUST NOT show any variations** depending on the caller.”
 
-- The `asset()`, `totalAssets()`, and `max{Deposit,Mint,Withdraw,Redeem}()` functions “**MUST NOT revert**.”
+- The `asset()`, `totalAssets()`, and `max{Deposit,Mint,claimBTC,Redeem}()` functions “**MUST NOT revert**.”
 
 ## Usage
 

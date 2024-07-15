@@ -10,7 +10,7 @@ import "../src/protocol/library/type/DataTypes.sol";
 import "@openzeppelin/contracts/proxy/transparent/TransparentUpgradeableProxy.sol";
 import "@openzeppelin/contracts/proxy/transparent/ProxyAdmin.sol";
 
-contract RequestBorrow is Script {
+contract borrow is Script {
     function run() external {
         address FBTC0 = vm.envAddress("FBTC0"); // Replace with actual address
         address user = vm.envAddress("USER_ADDRESS"); // Replace with actual address
@@ -18,7 +18,7 @@ contract RequestBorrow is Script {
 
         vm.startBroadcast();
         PoolManager(address(proxy)).repay(5 * 10 ** 6);
-        console.log("RequestBorrow success");
+        console.log("borrow success");
         vm.stopBroadcast();
     }
 }

@@ -5,7 +5,7 @@
       "transactionType": "CALL",
       "contractName": null,
       "contractAddress": "0xff937c773426d16fbcac87df1735d013dd31dd1d",
-      "function": "confirmMintFBTC0(uint256,bytes32,uint256)",
+      "function": "requestMintFBTC0(uint256,bytes32,uint256)",
       "arguments": [
         "495347",
         "0xcd731a2eba545379d7d37e1a747ac442b83982fa4feb326892734e1dc9d63d62",

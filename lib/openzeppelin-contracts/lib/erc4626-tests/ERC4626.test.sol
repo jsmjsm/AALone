@@ -153,7 +153,7 @@ abstract contract ERC4626Test is ERC4626Prop {
     }
 
     //
-    // withdraw
+    // claimBTC
     //
 
     function test_maxWithdraw(Init memory init) public virtual {
@@ -193,7 +193,7 @@ abstract contract ERC4626Test is ERC4626Prop {
         vm.assume(caller != owner);
         vm.assume(assets > 0);
         _approve(_vault_, owner, caller, 0);
-        vm.prank(caller); uint shares = IERC4626(_vault_).withdraw(assets, receiver, owner);
+        vm.prank(caller); uint shares = IERC4626(_vault_).claimBTC(assets, receiver, owner);
         assertGt(shares, 0); // this assert is expected to fail
     }
 

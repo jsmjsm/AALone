@@ -5,10 +5,8 @@
       "transactionType": "CALL",
       "contractName": null,
       "contractAddress": "0xff937c773426d16fbcac87df1735d013dd31dd1d",
-      "function": "requestWithdraw(uint256)",
-      "arguments": [
-        "2000000"
-      ],
+      "function": "withdraw(uint256)",
+      "arguments": ["2000000"],
       "transaction": {
         "from": "0x929f3f70c9edc192a3d3578d7463079aa3e2c7a8",
         "to": "0xff937c773426d16fbcac87df1735d013dd31dd1d",

@@ -139,7 +139,7 @@ rule withdrawTo(env e) {
         sender   != 0               && // invalid sender
         receiver != currentContract && // invalid receiver
         receiver != 0               && // invalid receiver
-        amount   <= balanceBefore      // withdraw doesn't exceed balance
+        amount   <= balanceBefore      // claimBTC doesn't exceed balance
     );
 
     // effects

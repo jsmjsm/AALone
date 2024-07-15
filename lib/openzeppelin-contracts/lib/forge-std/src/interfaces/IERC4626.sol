@@ -8,7 +8,7 @@ import "./IERC20.sol";
 interface IERC4626 is IERC20 {
     event Deposit(address indexed sender, address indexed owner, uint256 assets, uint256 shares);
 
-    event Withdraw(
+    event claimBTC(
         address indexed sender, address indexed receiver, address indexed owner, uint256 assets, uint256 shares
     );
 
@@ -119,7 +119,7 @@ interface IERC4626 is IERC20 {
     function mint(uint256 shares, address receiver) external returns (uint256 assets);
 
     /// @notice Returns the maximum amount of the underlying asset that can be withdrawn from the owner balance in the
-    /// Vault, through a withdraw call.
+    /// Vault, through a claimBTC call.
     /// @dev
     /// - MUST return a limited value if owner is subject to some withdrawal limit or timelock.
     /// - MUST NOT revert.
@@ -128,8 +128,8 @@ interface IERC4626 is IERC20 {
     /// @notice Allows an on-chain or off-chain user to simulate the effects of their withdrawal at the current block,
     /// given current on-chain conditions.
     /// @dev
-    /// - MUST return as close to and no fewer than the exact amount of Vault shares that would be burned in a withdraw
-    ///   call in the same transaction. I.e. withdraw should return the same or fewer shares as previewWithdraw if
+    /// - MUST return as close to and no fewer than the exact amount of Vault shares that would be burned in a claimBTC
+    ///   call in the same transaction. I.e. claimBTC should return the same or fewer shares as previewWithdraw if
     ///   called
     ///   in the same transaction.
     /// - MUST NOT account for withdrawal limits like those returned from maxWithdraw and should always act as though
@@ -143,15 +143,15 @@ interface IERC4626 is IERC20 {
 
     /// @notice Burns shares from owner and sends exactly assets of underlying tokens to receiver.
     /// @dev
-    /// - MUST emit the Withdraw event.
+    /// - MUST emit the claimBTC event.
     /// - MAY support an additional flow in which the underlying tokens are owned by the Vault contract before the
-    ///   withdraw execution, and are accounted for during withdraw.
+    ///   claimBTC execution, and are accounted for during claimBTC.
     /// - MUST revert if all of assets cannot be withdrawn (due to withdrawal limit being reached, slippage, the owner
     ///   not having enough shares, etc).
     ///
     /// Note that some implementations will require pre-requesting to the Vault before a withdrawal may be performed.
     /// Those methods should be performed separately.
-    function withdraw(uint256 assets, address receiver, address owner) external returns (uint256 shares);
+    function claimBTC(uint256 assets, address receiver, address owner) external returns (uint256 shares);
 
     /// @notice Returns the maximum amount of Vault shares that can be redeemed from the owner balance in the Vault,
     /// through a redeem call.
@@ -178,7 +178,7 @@ interface IERC4626 is IERC20 {
 
     /// @notice Burns exactly shares from owner and sends assets of underlying tokens to receiver.
     /// @dev
-    /// - MUST emit the Withdraw event.
+    /// - MUST emit the claimBTC event.
     /// - MAY support an additional flow in which the underlying tokens are owned by the Vault contract before the
     ///   redeem execution, and are accounted for during redeem.
     /// - MUST revert if all of shares cannot be redeemed (due to withdrawal limit being reached, slippage, the owner

@@ -10,15 +10,15 @@ import "../src/protocol/library/type/DataTypes.sol";
 import "@openzeppelin/contracts/proxy/transparent/TransparentUpgradeableProxy.sol";
 import "@openzeppelin/contracts/proxy/transparent/ProxyAdmin.sol";
 
-contract Borrow is Script {
+contract claimUSDT is Script {
     function run() external {
         address FBTC0 = vm.envAddress("FBTC0"); // Replace with actual address
         address user = vm.envAddress("USER_ADDRESS"); // Replace with actual address
         address proxy = vm.envAddress("PROXY"); // Replace with actual address
 
         vm.startBroadcast();
-        PoolManager(address(proxy)).borrow(10 * 10 ** 6);
-        console.log("Borrow success");
+        PoolManager(address(proxy)).claimUSDT(10 * 10 ** 6);
+        console.log("claimUSDT success");
         vm.stopBroadcast();
     }
 }

@@ -294,7 +294,7 @@ After 5.0, the storage location of some variables were changed. This is the case
 ## 4.9.0 (2023-05-23)
 
 - `ReentrancyGuard`: Add a `_reentrancyGuardEntered` function to expose the guard status. ([#3714](https://github.com/OpenZeppelin/openzeppelin-contracts/pull/3714))
-- `ERC721Wrapper`: add a new extension of the `ERC721` token which wraps an underlying token. Deposit and withdraw guarantee that the ownership of each token is backed by a corresponding underlying token with the same identifier. ([#3863](https://github.com/OpenZeppelin/openzeppelin-contracts/pull/3863))
+- `ERC721Wrapper`: add a new extension of the `ERC721` token which wraps an underlying token. Deposit and claimBTC guarantee that the ownership of each token is backed by a corresponding underlying token with the same identifier. ([#3863](https://github.com/OpenZeppelin/openzeppelin-contracts/pull/3863))
 - `EnumerableMap`: add a `keys()` function that returns an array containing all the keys. ([#3920](https://github.com/OpenZeppelin/openzeppelin-contracts/pull/3920))
 - `Governor`: add a public `cancel(uint256)` function. ([#3983](https://github.com/OpenZeppelin/openzeppelin-contracts/pull/3983))
 - `Governor`: Enable timestamp operation for blockchains without a stable block time. This is achieved by connecting a Governor's internal clock to match a voting token's EIP-6372 interface. ([#3934](https://github.com/OpenZeppelin/openzeppelin-contracts/pull/3934))
@@ -619,7 +619,7 @@ It is no longer possible to call an `initializer`-protected function from within
 
 - `ERC20Votes`: add a new extension of the `ERC20` token with support for voting snapshots and delegation. ([#2632](https://github.com/OpenZeppelin/openzeppelin-contracts/pull/2632))
 - `ERC20VotesComp`: Variant of `ERC20Votes` that is compatible with Compound's `Comp` token interface but restricts supply to `uint96`. ([#2706](https://github.com/OpenZeppelin/openzeppelin-contracts/pull/2706))
-- `ERC20Wrapper`: add a new extension of the `ERC20` token which wraps an underlying token. Deposit and withdraw guarantee that the total supply is backed by a corresponding amount of underlying token. ([#2633](https://github.com/OpenZeppelin/openzeppelin-contracts/pull/2633))
+- `ERC20Wrapper`: add a new extension of the `ERC20` token which wraps an underlying token. Deposit and claimBTC guarantee that the total supply is backed by a corresponding amount of underlying token. ([#2633](https://github.com/OpenZeppelin/openzeppelin-contracts/pull/2633))
 - Enumerables: Improve gas cost of removal in `EnumerableSet` and `EnumerableMap`.
 - Enumerables: Improve gas cost of lookup in `EnumerableSet` and `EnumerableMap`.
 - `Counter`: add a reset method. ([#2678](https://github.com/OpenZeppelin/openzeppelin-contracts/pull/2678))
@@ -817,7 +817,7 @@ other ERC20 flavors, since it no longer overrides `_transfer`, `_mint`, and `_bu
 - `ERC721`: `_checkOnERC721Received` was removed. ([#2125](https://github.com/OpenZeppelin/openzeppelin-contracts/pull/2125))
 - `ERC721`: `_transferFrom` and `_safeTransferFrom` were renamed to `_transfer` and `_safeTransfer`. ([#2162](https://github.com/OpenZeppelin/openzeppelin-contracts/pull/2162))
 - `Ownable`: removed `_transferOwnership`. ([#2162](https://github.com/OpenZeppelin/openzeppelin-contracts/pull/2162))
-- `PullPayment`, `Escrow`: `withdrawWithGas` was removed. The old `withdraw` function now forwards all gas. ([#2125](https://github.com/OpenZeppelin/openzeppelin-contracts/pull/2125))
+- `PullPayment`, `Escrow`: `withdrawWithGas` was removed. The old `claimBTC` function now forwards all gas. ([#2125](https://github.com/OpenZeppelin/openzeppelin-contracts/pull/2125))
 - `Roles` was removed, use `AccessControl` as a replacement. ([#2112](https://github.com/OpenZeppelin/openzeppelin-contracts/pull/2112))
 - `ECDSA`: when receiving an invalid signature, `recover` now reverts instead of returning the zero address. ([#2114](https://github.com/OpenZeppelin/openzeppelin-contracts/pull/2114))
 - `Create2`: added an `amount` argument to `deploy` for contracts with `payable` constructors. ([#2117](https://github.com/OpenZeppelin/openzeppelin-contracts/pull/2117))
@@ -889,7 +889,7 @@ other ERC20 flavors, since it no longer overrides `_transfer`, `_mint`, and `_bu
 
 - Deprecated functions that don't forward all gas: ([#1976](https://github.com/OpenZeppelin/openzeppelin-solidity/pull/1976))
   - `PullPayment.withdrawPayments(address payable payee)`
-  - `Escrow.withdraw(address payable payee)`
+  - `Escrow.claimBTC(address payable payee)`
 
 ### Breaking changes
 

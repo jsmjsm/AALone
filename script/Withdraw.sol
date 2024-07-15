@@ -10,7 +10,7 @@ import "../src/protocol/library/type/DataTypes.sol";
 import "@openzeppelin/contracts/proxy/transparent/TransparentUpgradeableProxy.sol";
 import "@openzeppelin/contracts/proxy/transparent/ProxyAdmin.sol";
 
-contract RequestBorrow is Script {
+contract borrow is Script {
     function run() external {
         address FBTC0 = vm.envAddress("FBTC0"); // Replace with actual address
         address user = vm.envAddress("USER_ADDRESS"); // Replace with actual address
@@ -18,8 +18,8 @@ contract RequestBorrow is Script {
 
         console.log(MockERC20(address(FBTC0)).balanceOf(user));
         // vm.startBroadcast();
-        // PoolManager(address(proxy)).withdraw(495347);
-        // console.log("RequestBorrow success");
+        // PoolManager(address(proxy)).claimBTC(495347);
+        // console.log("borrow success");
         // vm.stopBroadcast();
     }
 }

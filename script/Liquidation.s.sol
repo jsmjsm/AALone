@@ -16,16 +16,9 @@ contract Liquidation is Script {
         address user = vm.envAddress("USER_ADDRESS"); // Replace with actual address
         address proxy = vm.envAddress("PROXY"); // Replace with actual address
 
-        DataTypes.UserPoolReserveInformation
-            memory userPoolReserveInformation = DataTypes
-                .UserPoolReserveInformation(0, 4250000, 0, 0, 0);
         vm.startBroadcast();
-        PoolManager(address(proxy)).liquidate(
-            user,
-            1000,
-            userPoolReserveInformation
-        );
-        console.log("RequestBorrow success");
+        PoolManager(address(proxy)).liquidate(user, 100, 100);
+        console.log("borrow success");
         vm.stopBroadcast();
     }
 }
