@@ -38,6 +38,7 @@ library DataTypes {
 
     struct PoolManagerReserveInformation {
         uint256 userAmount;
+        uint256 collateral;
         uint256 debt;
         uint256 claimableUSDT;
         uint256 claimableBTC;
@@ -69,6 +70,7 @@ library DataTypes {
         uint40 timeStampIndex;
         uint256 collateral;
         uint256 debt;
+        uint256 debtToProtocol;
         uint256 claimableUSDT;
         uint256 claimableBTC;
     }

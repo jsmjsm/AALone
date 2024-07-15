@@ -24,4 +24,7 @@ contract PoolManagerStorage {
 
     // Mapping of user addresses to their pool configuration
     mapping(address => DataTypes.UserPoolConfig) internal _userPoolConfig;
+
+    DataTypes.PoolManagerReserveInformation
+        internal _poolManagerReserveInformation;
 }
