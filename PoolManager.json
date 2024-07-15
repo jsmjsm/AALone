@@ -1,0 +1,1748 @@
+[
+	{
+		"type": "function",
+		"name": "DENOMINATOR",
+		"inputs": [],
+		"outputs": [
+			{
+				"name": "",
+				"type": "uint256",
+				"internalType": "uint256"
+			}
+		],
+		"stateMutability": "view"
+	},
+	{
+		"type": "function",
+		"name": "IS_TEST",
+		"inputs": [],
+		"outputs": [
+			{
+				"name": "",
+				"type": "bool",
+				"internalType": "bool"
+			}
+		],
+		"stateMutability": "view"
+	},
+	{
+		"type": "function",
+		"name": "borrow",
+		"inputs": [
+			{
+				"name": "amount",
+				"type": "uint256",
+				"internalType": "uint256"
+			}
+		],
+		"outputs": [],
+		"stateMutability": "nonpayable"
+	},
+	{
+		"type": "function",
+		"name": "calculateAccumulatedDebt",
+		"inputs": [
+			{
+				"name": "debt",
+				"type": "uint256",
+				"internalType": "uint256"
+			},
+			{
+				"name": "poolInterestRate",
+				"type": "uint256",
+				"internalType": "uint256"
+			},
+			{
+				"name": "protocolInterestRate",
+				"type": "uint256",
+				"internalType": "uint256"
+			},
+			{
+				"name": "timeStampIndex",
+				"type": "uint40",
+				"internalType": "uint40"
+			}
+		],
+		"outputs": [
+			{
+				"name": "feeForPool",
+				"type": "uint256",
+				"internalType": "uint256"
+			},
+			{
+				"name": "feeForProtocal",
+				"type": "uint256",
+				"internalType": "uint256"
+			}
+		],
+		"stateMutability": "view"
+	},
+	{
+		"type": "function",
+		"name": "calculateMaxBorrowAmount",
+		"inputs": [
+			{
+				"name": "loanToValue",
+				"type": "uint256",
+				"internalType": "uint256"
+			},
+			{
+				"name": "collateral",
+				"type": "uint256",
+				"internalType": "uint256"
+			},
+			{
+				"name": "debt",
+				"type": "uint256",
+				"internalType": "uint256"
+			},
+			{
+				"name": "FBTC0Price",
+				"type": "uint256",
+				"internalType": "uint256"
+			},
+			{
+				"name": "USDTDecimal",
+				"type": "uint256",
+				"internalType": "uint256"
+			},
+			{
+				"name": "FBTC0Decimal",
+				"type": "uint256",
+				"internalType": "uint256"
+			},
+			{
+				"name": "oracleDecimal",
+				"type": "uint256",
+				"internalType": "uint256"
+			}
+		],
+		"outputs": [
+			{
+				"name": "",
+				"type": "uint256",
+				"internalType": "uint256"
+			}
+		],
+		"stateMutability": "view"
+	},
+	{
+		"type": "function",
+		"name": "calculateMaxWithdrawAmount",
+		"inputs": [
+			{
+				"name": "liquidationThreshold",
+				"type": "uint256",
+				"internalType": "uint256"
+			},
+			{
+				"name": "collateral",
+				"type": "uint256",
+				"internalType": "uint256"
+			},
+			{
+				"name": "debt",
+				"type": "uint256",
+				"internalType": "uint256"
+			},
+			{
+				"name": "FBTC0Price",
+				"type": "uint256",
+				"internalType": "uint256"
+			},
+			{
+				"name": "USDTDecimal",
+				"type": "uint256",
+				"internalType": "uint256"
+			},
+			{
+				"name": "FBTC0Decimal",
+				"type": "uint256",
+				"internalType": "uint256"
+			},
+			{
+				"name": "oracleDecimal",
+				"type": "uint256",
+				"internalType": "uint256"
+			}
+		],
+		"outputs": [
+			{
+				"name": "",
+				"type": "uint256",
+				"internalType": "uint256"
+			}
+		],
+		"stateMutability": "view"
+	},
+	{
+		"type": "function",
+		"name": "claimBTC",
+		"inputs": [
+			{
+				"name": "amount",
+				"type": "uint256",
+				"internalType": "uint256"
+			}
+		],
+		"outputs": [],
+		"stateMutability": "nonpayable"
+	},
+	{
+		"type": "function",
+		"name": "claimProtocolEarnings",
+		"inputs": [],
+		"outputs": [],
+		"stateMutability": "nonpayable"
+	},
+	{
+		"type": "function",
+		"name": "claimUSDT",
+		"inputs": [
+			{
+				"name": "amount",
+				"type": "uint256",
+				"internalType": "uint256"
+			}
+		],
+		"outputs": [],
+		"stateMutability": "nonpayable"
+	},
+	{
+		"type": "function",
+		"name": "createPool",
+		"inputs": [
+			{
+				"name": "user",
+				"type": "address",
+				"internalType": "address"
+			}
+		],
+		"outputs": [],
+		"stateMutability": "nonpayable"
+	},
+	{
+		"type": "function",
+		"name": "excludeArtifacts",
+		"inputs": [],
+		"outputs": [
+			{
+				"name": "excludedArtifacts_",
+				"type": "string[]",
+				"internalType": "string[]"
+			}
+		],
+		"stateMutability": "view"
+	},
+	{
+		"type": "function",
+		"name": "excludeContracts",
+		"inputs": [],
+		"outputs": [
+			{
+				"name": "excludedContracts_",
+				"type": "address[]",
+				"internalType": "address[]"
+			}
+		],
+		"stateMutability": "view"
+	},
+	{
+		"type": "function",
+		"name": "excludeSenders",
+		"inputs": [],
+		"outputs": [
+			{
+				"name": "excludedSenders_",
+				"type": "address[]",
+				"internalType": "address[]"
+			}
+		],
+		"stateMutability": "view"
+	},
+	{
+		"type": "function",
+		"name": "failed",
+		"inputs": [],
+		"outputs": [
+			{
+				"name": "",
+				"type": "bool",
+				"internalType": "bool"
+			}
+		],
+		"stateMutability": "view"
+	},
+	{
+		"type": "function",
+		"name": "getPoolManagerConfig",
+		"inputs": [],
+		"outputs": [
+			{
+				"name": "",
+				"type": "tuple",
+				"internalType": "struct DataTypes.PoolManagerConfig",
+				"components": [
+					{
+						"name": "DEFAULT_LIQUIDATION_THRESHOLD",
+						"type": "uint256",
+						"internalType": "uint256"
+					},
+					{
+						"name": "DEFAULT_POOL_INTEREST_RATE",
+						"type": "uint256",
+						"internalType": "uint256"
+					},
+					{
+						"name": "DEFAULT_LTV",
+						"type": "uint256",
+						"internalType": "uint256"
+					},
+					{
+						"name": "PROTOCOL_FEE_INTEREST_RATE",
+						"type": "uint256",
+						"internalType": "uint256"
+					},
+					{
+						"name": "USDT",
+						"type": "address",
+						"internalType": "contract IERC20"
+					},
+					{
+						"name": "FBTC0",
+						"type": "address",
+						"internalType": "contract IERC20"
+					},
+					{
+						"name": "FBTC1",
+						"type": "address",
+						"internalType": "contract IFBTC1"
+					},
+					{
+						"name": "FBTCOracle",
+						"type": "address",
+						"internalType": "contract IFBTCOracle"
+					},
+					{
+						"name": "AvalonUSDTVault",
+						"type": "address",
+						"internalType": "address"
+					},
+					{
+						"name": "AntaphaUSDTVault",
+						"type": "address",
+						"internalType": "address"
+					}
+				]
+			}
+		],
+		"stateMutability": "view"
+	},
+	{
+		"type": "function",
+		"name": "getPoolManagerReserveInformation",
+		"inputs": [],
+		"outputs": [
+			{
+				"name": "",
+				"type": "tuple",
+				"internalType": "struct DataTypes.PoolManagerReserveInformation",
+				"components": [
+					{
+						"name": "userAmount",
+						"type": "uint256",
+						"internalType": "uint256"
+					},
+					{
+						"name": "collateral",
+						"type": "uint256",
+						"internalType": "uint256"
+					},
+					{
+						"name": "debt",
+						"type": "uint256",
+						"internalType": "uint256"
+					},
+					{
+						"name": "claimableUSDT",
+						"type": "uint256",
+						"internalType": "uint256"
+					},
+					{
+						"name": "claimableBTC",
+						"type": "uint256",
+						"internalType": "uint256"
+					}
+				]
+			}
+		],
+		"stateMutability": "view"
+	},
+	{
+		"type": "function",
+		"name": "getProtocalProfitAccumulate",
+		"inputs": [],
+		"outputs": [
+			{
+				"name": "",
+				"type": "uint256",
+				"internalType": "uint256"
+			}
+		],
+		"stateMutability": "view"
+	},
+	{
+		"type": "function",
+		"name": "getProtocolProfitUnclaimed",
+		"inputs": [],
+		"outputs": [
+			{
+				"name": "",
+				"type": "uint256",
+				"internalType": "uint256"
+			}
+		],
+		"stateMutability": "view"
+	},
+	{
+		"type": "function",
+		"name": "getUserPoolConfig",
+		"inputs": [
+			{
+				"name": "user",
+				"type": "address",
+				"internalType": "address"
+			}
+		],
+		"outputs": [
+			{
+				"name": "",
+				"type": "tuple",
+				"internalType": "struct DataTypes.UserPoolConfig",
+				"components": [
+					{
+						"name": "init",
+						"type": "bool",
+						"internalType": "bool"
+					},
+					{
+						"name": "interestRate",
+						"type": "uint256",
+						"internalType": "uint256"
+					},
+					{
+						"name": "loanToValue",
+						"type": "uint256",
+						"internalType": "uint256"
+					},
+					{
+						"name": "liquidationThreshold",
+						"type": "uint256",
+						"internalType": "uint256"
+					}
+				]
+			}
+		],
+		"stateMutability": "view"
+	},
+	{
+		"type": "function",
+		"name": "getUserPoolReserveInformation",
+		"inputs": [
+			{
+				"name": "user",
+				"type": "address",
+				"internalType": "address"
+			}
+		],
+		"outputs": [
+			{
+				"name": "reserveAfterUpdateDebt",
+				"type": "tuple",
+				"internalType": "struct DataTypes.UserPoolReserveInformation",
+				"components": [
+					{
+						"name": "timeStampIndex",
+						"type": "uint40",
+						"internalType": "uint40"
+					},
+					{
+						"name": "collateral",
+						"type": "uint256",
+						"internalType": "uint256"
+					},
+					{
+						"name": "debt",
+						"type": "uint256",
+						"internalType": "uint256"
+					},
+					{
+						"name": "debtToProtocol",
+						"type": "uint256",
+						"internalType": "uint256"
+					},
+					{
+						"name": "claimableUSDT",
+						"type": "uint256",
+						"internalType": "uint256"
+					},
+					{
+						"name": "claimableBTC",
+						"type": "uint256",
+						"internalType": "uint256"
+					}
+				]
+			}
+		],
+		"stateMutability": "view"
+	},
+	{
+		"type": "function",
+		"name": "initialize",
+		"inputs": [
+			{
+				"name": "owner",
+				"type": "address",
+				"internalType": "address"
+			}
+		],
+		"outputs": [],
+		"stateMutability": "nonpayable"
+	},
+	{
+		"type": "function",
+		"name": "liquidate",
+		"inputs": [
+			{
+				"name": "user",
+				"type": "address",
+				"internalType": "address"
+			},
+			{
+				"name": "collateralDecrease",
+				"type": "uint256",
+				"internalType": "uint256"
+			},
+			{
+				"name": "debtDecrease",
+				"type": "uint256",
+				"internalType": "uint256"
+			}
+		],
+		"outputs": [],
+		"stateMutability": "nonpayable"
+	},
+	{
+		"type": "function",
+		"name": "owner",
+		"inputs": [],
+		"outputs": [
+			{
+				"name": "",
+				"type": "address",
+				"internalType": "address"
+			}
+		],
+		"stateMutability": "view"
+	},
+	{
+		"type": "function",
+		"name": "renounceOwnership",
+		"inputs": [],
+		"outputs": [],
+		"stateMutability": "nonpayable"
+	},
+	{
+		"type": "function",
+		"name": "repay",
+		"inputs": [
+			{
+				"name": "amount",
+				"type": "uint256",
+				"internalType": "uint256"
+			}
+		],
+		"outputs": [],
+		"stateMutability": "payable"
+	},
+	{
+		"type": "function",
+		"name": "requestMintFBTC0",
+		"inputs": [
+			{
+				"name": "amount",
+				"type": "uint256",
+				"internalType": "uint256"
+			},
+			{
+				"name": "depositTxid",
+				"type": "bytes32",
+				"internalType": "bytes32"
+			},
+			{
+				"name": "outputIndex",
+				"type": "uint256",
+				"internalType": "uint256"
+			}
+		],
+		"outputs": [],
+		"stateMutability": "nonpayable"
+	},
+	{
+		"type": "function",
+		"name": "setPoolManagerConfig",
+		"inputs": [
+			{
+				"name": "configInput",
+				"type": "tuple",
+				"internalType": "struct DataTypes.PoolManagerConfig",
+				"components": [
+					{
+						"name": "DEFAULT_LIQUIDATION_THRESHOLD",
+						"type": "uint256",
+						"internalType": "uint256"
+					},
+					{
+						"name": "DEFAULT_POOL_INTEREST_RATE",
+						"type": "uint256",
+						"internalType": "uint256"
+					},
+					{
+						"name": "DEFAULT_LTV",
+						"type": "uint256",
+						"internalType": "uint256"
+					},
+					{
+						"name": "PROTOCOL_FEE_INTEREST_RATE",
+						"type": "uint256",
+						"internalType": "uint256"
+					},
+					{
+						"name": "USDT",
+						"type": "address",
+						"internalType": "contract IERC20"
+					},
+					{
+						"name": "FBTC0",
+						"type": "address",
+						"internalType": "contract IERC20"
+					},
+					{
+						"name": "FBTC1",
+						"type": "address",
+						"internalType": "contract IFBTC1"
+					},
+					{
+						"name": "FBTCOracle",
+						"type": "address",
+						"internalType": "contract IFBTCOracle"
+					},
+					{
+						"name": "AvalonUSDTVault",
+						"type": "address",
+						"internalType": "address"
+					},
+					{
+						"name": "AntaphaUSDTVault",
+						"type": "address",
+						"internalType": "address"
+					}
+				]
+			}
+		],
+		"outputs": [],
+		"stateMutability": "nonpayable"
+	},
+	{
+		"type": "function",
+		"name": "setUserPoolConfig",
+		"inputs": [
+			{
+				"name": "user",
+				"type": "address",
+				"internalType": "address"
+			},
+			{
+				"name": "configInput",
+				"type": "tuple",
+				"internalType": "struct DataTypes.UserPoolConfig",
+				"components": [
+					{
+						"name": "init",
+						"type": "bool",
+						"internalType": "bool"
+					},
+					{
+						"name": "interestRate",
+						"type": "uint256",
+						"internalType": "uint256"
+					},
+					{
+						"name": "loanToValue",
+						"type": "uint256",
+						"internalType": "uint256"
+					},
+					{
+						"name": "liquidationThreshold",
+						"type": "uint256",
+						"internalType": "uint256"
+					}
+				]
+			}
+		],
+		"outputs": [],
+		"stateMutability": "nonpayable"
+	},
+	{
+		"type": "function",
+		"name": "supply",
+		"inputs": [
+			{
+				"name": "amount",
+				"type": "uint256",
+				"internalType": "uint256"
+			}
+		],
+		"outputs": [],
+		"stateMutability": "nonpayable"
+	},
+	{
+		"type": "function",
+		"name": "targetArtifactSelectors",
+		"inputs": [],
+		"outputs": [
+			{
+				"name": "targetedArtifactSelectors_",
+				"type": "tuple[]",
+				"internalType": "struct StdInvariant.FuzzArtifactSelector[]",
+				"components": [
+					{
+						"name": "artifact",
+						"type": "string",
+						"internalType": "string"
+					},
+					{
+						"name": "selectors",
+						"type": "bytes4[]",
+						"internalType": "bytes4[]"
+					}
+				]
+			}
+		],
+		"stateMutability": "view"
+	},
+	{
+		"type": "function",
+		"name": "targetArtifacts",
+		"inputs": [],
+		"outputs": [
+			{
+				"name": "targetedArtifacts_",
+				"type": "string[]",
+				"internalType": "string[]"
+			}
+		],
+		"stateMutability": "view"
+	},
+	{
+		"type": "function",
+		"name": "targetContracts",
+		"inputs": [],
+		"outputs": [
+			{
+				"name": "targetedContracts_",
+				"type": "address[]",
+				"internalType": "address[]"
+			}
+		],
+		"stateMutability": "view"
+	},
+	{
+		"type": "function",
+		"name": "targetInterfaces",
+		"inputs": [],
+		"outputs": [
+			{
+				"name": "targetedInterfaces_",
+				"type": "tuple[]",
+				"internalType": "struct StdInvariant.FuzzInterface[]",
+				"components": [
+					{
+						"name": "addr",
+						"type": "address",
+						"internalType": "address"
+					},
+					{
+						"name": "artifacts",
+						"type": "string[]",
+						"internalType": "string[]"
+					}
+				]
+			}
+		],
+		"stateMutability": "view"
+	},
+	{
+		"type": "function",
+		"name": "targetSelectors",
+		"inputs": [],
+		"outputs": [
+			{
+				"name": "targetedSelectors_",
+				"type": "tuple[]",
+				"internalType": "struct StdInvariant.FuzzSelector[]",
+				"components": [
+					{
+						"name": "addr",
+						"type": "address",
+						"internalType": "address"
+					},
+					{
+						"name": "selectors",
+						"type": "bytes4[]",
+						"internalType": "bytes4[]"
+					}
+				]
+			}
+		],
+		"stateMutability": "view"
+	},
+	{
+		"type": "function",
+		"name": "targetSenders",
+		"inputs": [],
+		"outputs": [
+			{
+				"name": "targetedSenders_",
+				"type": "address[]",
+				"internalType": "address[]"
+			}
+		],
+		"stateMutability": "view"
+	},
+	{
+		"type": "function",
+		"name": "transferOwnership",
+		"inputs": [
+			{
+				"name": "newOwner",
+				"type": "address",
+				"internalType": "address"
+			}
+		],
+		"outputs": [],
+		"stateMutability": "nonpayable"
+	},
+	{
+		"type": "function",
+		"name": "withdraw",
+		"inputs": [
+			{
+				"name": "amount",
+				"type": "uint256",
+				"internalType": "uint256"
+			}
+		],
+		"outputs": [],
+		"stateMutability": "nonpayable"
+	},
+	{
+		"type": "event",
+		"name": "Borrow",
+		"inputs": [
+			{
+				"name": "user",
+				"type": "address",
+				"indexed": true,
+				"internalType": "address"
+			},
+			{
+				"name": "amount",
+				"type": "uint256",
+				"indexed": false,
+				"internalType": "uint256"
+			},
+			{
+				"name": "userPoolReserveInformation",
+				"type": "tuple",
+				"indexed": false,
+				"internalType": "struct DataTypes.UserPoolReserveInformation",
+				"components": [
+					{
+						"name": "timeStampIndex",
+						"type": "uint40",
+						"internalType": "uint40"
+					},
+					{
+						"name": "collateral",
+						"type": "uint256",
+						"internalType": "uint256"
+					},
+					{
+						"name": "debt",
+						"type": "uint256",
+						"internalType": "uint256"
+					},
+					{
+						"name": "debtToProtocol",
+						"type": "uint256",
+						"internalType": "uint256"
+					},
+					{
+						"name": "claimableUSDT",
+						"type": "uint256",
+						"internalType": "uint256"
+					},
+					{
+						"name": "claimableBTC",
+						"type": "uint256",
+						"internalType": "uint256"
+					}
+				]
+			}
+		],
+		"anonymous": false
+	},
+	{
+		"type": "event",
+		"name": "ClaimBTC",
+		"inputs": [
+			{
+				"name": "user",
+				"type": "address",
+				"indexed": true,
+				"internalType": "address"
+			},
+			{
+				"name": "amount",
+				"type": "uint256",
+				"indexed": false,
+				"internalType": "uint256"
+			},
+			{
+				"name": "userPoolReserveInformation",
+				"type": "tuple",
+				"indexed": false,
+				"internalType": "struct DataTypes.UserPoolReserveInformation",
+				"components": [
+					{
+						"name": "timeStampIndex",
+						"type": "uint40",
+						"internalType": "uint40"
+					},
+					{
+						"name": "collateral",
+						"type": "uint256",
+						"internalType": "uint256"
+					},
+					{
+						"name": "debt",
+						"type": "uint256",
+						"internalType": "uint256"
+					},
+					{
+						"name": "debtToProtocol",
+						"type": "uint256",
+						"internalType": "uint256"
+					},
+					{
+						"name": "claimableUSDT",
+						"type": "uint256",
+						"internalType": "uint256"
+					},
+					{
+						"name": "claimableBTC",
+						"type": "uint256",
+						"internalType": "uint256"
+					}
+				]
+			}
+		],
+		"anonymous": false
+	},
+	{
+		"type": "event",
+		"name": "ClaimUSDT",
+		"inputs": [
+			{
+				"name": "user",
+				"type": "address",
+				"indexed": true,
+				"internalType": "address"
+			},
+			{
+				"name": "amount",
+				"type": "uint256",
+				"indexed": false,
+				"internalType": "uint256"
+			},
+			{
+				"name": "userPoolReserveInformation",
+				"type": "tuple",
+				"indexed": false,
+				"internalType": "struct DataTypes.UserPoolReserveInformation",
+				"components": [
+					{
+						"name": "timeStampIndex",
+						"type": "uint40",
+						"internalType": "uint40"
+					},
+					{
+						"name": "collateral",
+						"type": "uint256",
+						"internalType": "uint256"
+					},
+					{
+						"name": "debt",
+						"type": "uint256",
+						"internalType": "uint256"
+					},
+					{
+						"name": "debtToProtocol",
+						"type": "uint256",
+						"internalType": "uint256"
+					},
+					{
+						"name": "claimableUSDT",
+						"type": "uint256",
+						"internalType": "uint256"
+					},
+					{
+						"name": "claimableBTC",
+						"type": "uint256",
+						"internalType": "uint256"
+					}
+				]
+			}
+		],
+		"anonymous": false
+	},
+	{
+		"type": "event",
+		"name": "Initialized",
+		"inputs": [
+			{
+				"name": "version",
+				"type": "uint64",
+				"indexed": false,
+				"internalType": "uint64"
+			}
+		],
+		"anonymous": false
+	},
+	{
+		"type": "event",
+		"name": "Liquidation",
+		"inputs": [
+			{
+				"name": "user",
+				"type": "address",
+				"indexed": true,
+				"internalType": "address"
+			},
+			{
+				"name": "collateral",
+				"type": "uint256",
+				"indexed": false,
+				"internalType": "uint256"
+			},
+			{
+				"name": "debt",
+				"type": "uint256",
+				"indexed": false,
+				"internalType": "uint256"
+			}
+		],
+		"anonymous": false
+	},
+	{
+		"type": "event",
+		"name": "OwnershipTransferred",
+		"inputs": [
+			{
+				"name": "previousOwner",
+				"type": "address",
+				"indexed": true,
+				"internalType": "address"
+			},
+			{
+				"name": "newOwner",
+				"type": "address",
+				"indexed": true,
+				"internalType": "address"
+			}
+		],
+		"anonymous": false
+	},
+	{
+		"type": "event",
+		"name": "PoolCreated",
+		"inputs": [
+			{
+				"name": "user",
+				"type": "address",
+				"indexed": true,
+				"internalType": "address"
+			},
+			{
+				"name": "userPoolConfig",
+				"type": "tuple",
+				"indexed": false,
+				"internalType": "struct DataTypes.UserPoolConfig",
+				"components": [
+					{
+						"name": "init",
+						"type": "bool",
+						"internalType": "bool"
+					},
+					{
+						"name": "interestRate",
+						"type": "uint256",
+						"internalType": "uint256"
+					},
+					{
+						"name": "loanToValue",
+						"type": "uint256",
+						"internalType": "uint256"
+					},
+					{
+						"name": "liquidationThreshold",
+						"type": "uint256",
+						"internalType": "uint256"
+					}
+				]
+			}
+		],
+		"anonymous": false
+	},
+	{
+		"type": "event",
+		"name": "Repay",
+		"inputs": [
+			{
+				"name": "user",
+				"type": "address",
+				"indexed": true,
+				"internalType": "address"
+			},
+			{
+				"name": "amount",
+				"type": "uint256",
+				"indexed": false,
+				"internalType": "uint256"
+			},
+			{
+				"name": "userPoolReserveInformation",
+				"type": "tuple",
+				"indexed": false,
+				"internalType": "struct DataTypes.UserPoolReserveInformation",
+				"components": [
+					{
+						"name": "timeStampIndex",
+						"type": "uint40",
+						"internalType": "uint40"
+					},
+					{
+						"name": "collateral",
+						"type": "uint256",
+						"internalType": "uint256"
+					},
+					{
+						"name": "debt",
+						"type": "uint256",
+						"internalType": "uint256"
+					},
+					{
+						"name": "debtToProtocol",
+						"type": "uint256",
+						"internalType": "uint256"
+					},
+					{
+						"name": "claimableUSDT",
+						"type": "uint256",
+						"internalType": "uint256"
+					},
+					{
+						"name": "claimableBTC",
+						"type": "uint256",
+						"internalType": "uint256"
+					}
+				]
+			}
+		],
+		"anonymous": false
+	},
+	{
+		"type": "event",
+		"name": "RequestMintFBTC0",
+		"inputs": [
+			{
+				"name": "amount",
+				"type": "uint256",
+				"indexed": false,
+				"internalType": "uint256"
+			},
+			{
+				"name": "depositTxid",
+				"type": "bytes32",
+				"indexed": false,
+				"internalType": "bytes32"
+			},
+			{
+				"name": "outputIndex",
+				"type": "uint256",
+				"indexed": false,
+				"internalType": "uint256"
+			}
+		],
+		"anonymous": false
+	},
+	{
+		"type": "event",
+		"name": "Supply",
+		"inputs": [
+			{
+				"name": "user",
+				"type": "address",
+				"indexed": true,
+				"internalType": "address"
+			},
+			{
+				"name": "amount",
+				"type": "uint256",
+				"indexed": false,
+				"internalType": "uint256"
+			},
+			{
+				"name": "userPoolReserveInformation",
+				"type": "tuple",
+				"indexed": false,
+				"internalType": "struct DataTypes.UserPoolReserveInformation",
+				"components": [
+					{
+						"name": "timeStampIndex",
+						"type": "uint40",
+						"internalType": "uint40"
+					},
+					{
+						"name": "collateral",
+						"type": "uint256",
+						"internalType": "uint256"
+					},
+					{
+						"name": "debt",
+						"type": "uint256",
+						"internalType": "uint256"
+					},
+					{
+						"name": "debtToProtocol",
+						"type": "uint256",
+						"internalType": "uint256"
+					},
+					{
+						"name": "claimableUSDT",
+						"type": "uint256",
+						"internalType": "uint256"
+					},
+					{
+						"name": "claimableBTC",
+						"type": "uint256",
+						"internalType": "uint256"
+					}
+				]
+			}
+		],
+		"anonymous": false
+	},
+	{
+		"type": "event",
+		"name": "Withdraw",
+		"inputs": [
+			{
+				"name": "user",
+				"type": "address",
+				"indexed": true,
+				"internalType": "address"
+			},
+			{
+				"name": "amount",
+				"type": "uint256",
+				"indexed": false,
+				"internalType": "uint256"
+			},
+			{
+				"name": "userPoolReserveInformation",
+				"type": "tuple",
+				"indexed": false,
+				"internalType": "struct DataTypes.UserPoolReserveInformation",
+				"components": [
+					{
+						"name": "timeStampIndex",
+						"type": "uint40",
+						"internalType": "uint40"
+					},
+					{
+						"name": "collateral",
+						"type": "uint256",
+						"internalType": "uint256"
+					},
+					{
+						"name": "debt",
+						"type": "uint256",
+						"internalType": "uint256"
+					},
+					{
+						"name": "debtToProtocol",
+						"type": "uint256",
+						"internalType": "uint256"
+					},
+					{
+						"name": "claimableUSDT",
+						"type": "uint256",
+						"internalType": "uint256"
+					},
+					{
+						"name": "claimableBTC",
+						"type": "uint256",
+						"internalType": "uint256"
+					}
+				]
+			}
+		],
+		"anonymous": false
+	},
+	{
+		"type": "event",
+		"name": "log",
+		"inputs": [
+			{
+				"name": "",
+				"type": "string",
+				"indexed": false,
+				"internalType": "string"
+			}
+		],
+		"anonymous": false
+	},
+	{
+		"type": "event",
+		"name": "log_address",
+		"inputs": [
+			{
+				"name": "",
+				"type": "address",
+				"indexed": false,
+				"internalType": "address"
+			}
+		],
+		"anonymous": false
+	},
+	{
+		"type": "event",
+		"name": "log_array",
+		"inputs": [
+			{
+				"name": "val",
+				"type": "uint256[]",
+				"indexed": false,
+				"internalType": "uint256[]"
+			}
+		],
+		"anonymous": false
+	},
+	{
+		"type": "event",
+		"name": "log_array",
+		"inputs": [
+			{
+				"name": "val",
+				"type": "int256[]",
+				"indexed": false,
+				"internalType": "int256[]"
+			}
+		],
+		"anonymous": false
+	},
+	{
+		"type": "event",
+		"name": "log_array",
+		"inputs": [
+			{
+				"name": "val",
+				"type": "address[]",
+				"indexed": false,
+				"internalType": "address[]"
+			}
+		],
+		"anonymous": false
+	},
+	{
+		"type": "event",
+		"name": "log_bytes",
+		"inputs": [
+			{
+				"name": "",
+				"type": "bytes",
+				"indexed": false,
+				"internalType": "bytes"
+			}
+		],
+		"anonymous": false
+	},
+	{
+		"type": "event",
+		"name": "log_bytes32",
+		"inputs": [
+			{
+				"name": "",
+				"type": "bytes32",
+				"indexed": false,
+				"internalType": "bytes32"
+			}
+		],
+		"anonymous": false
+	},
+	{
+		"type": "event",
+		"name": "log_int",
+		"inputs": [
+			{
+				"name": "",
+				"type": "int256",
+				"indexed": false,
+				"internalType": "int256"
+			}
+		],
+		"anonymous": false
+	},
+	{
+		"type": "event",
+		"name": "log_named_address",
+		"inputs": [
+			{
+				"name": "key",
+				"type": "string",
+				"indexed": false,
+				"internalType": "string"
+			},
+			{
+				"name": "val",
+				"type": "address",
+				"indexed": false,
+				"internalType": "address"
+			}
+		],
+		"anonymous": false
+	},
+	{
+		"type": "event",
+		"name": "log_named_array",
+		"inputs": [
+			{
+				"name": "key",
+				"type": "string",
+				"indexed": false,
+				"internalType": "string"
+			},
+			{
+				"name": "val",
+				"type": "uint256[]",
+				"indexed": false,
+				"internalType": "uint256[]"
+			}
+		],
+		"anonymous": false
+	},
+	{
+		"type": "event",
+		"name": "log_named_array",
+		"inputs": [
+			{
+				"name": "key",
+				"type": "string",
+				"indexed": false,
+				"internalType": "string"
+			},
+			{
+				"name": "val",
+				"type": "int256[]",
+				"indexed": false,
+				"internalType": "int256[]"
+			}
+		],
+		"anonymous": false
+	},
+	{
+		"type": "event",
+		"name": "log_named_array",
+		"inputs": [
+			{
+				"name": "key",
+				"type": "string",
+				"indexed": false,
+				"internalType": "string"
+			},
+			{
+				"name": "val",
+				"type": "address[]",
+				"indexed": false,
+				"internalType": "address[]"
+			}
+		],
+		"anonymous": false
+	},
+	{
+		"type": "event",
+		"name": "log_named_bytes",
+		"inputs": [
+			{
+				"name": "key",
+				"type": "string",
+				"indexed": false,
+				"internalType": "string"
+			},
+			{
+				"name": "val",
+				"type": "bytes",
+				"indexed": false,
+				"internalType": "bytes"
+			}
+		],
+		"anonymous": false
+	},
+	{
+		"type": "event",
+		"name": "log_named_bytes32",
+		"inputs": [
+			{
+				"name": "key",
+				"type": "string",
+				"indexed": false,
+				"internalType": "string"
+			},
+			{
+				"name": "val",
+				"type": "bytes32",
+				"indexed": false,
+				"internalType": "bytes32"
+			}
+		],
+		"anonymous": false
+	},
+	{
+		"type": "event",
+		"name": "log_named_decimal_int",
+		"inputs": [
+			{
+				"name": "key",
+				"type": "string",
+				"indexed": false,
+				"internalType": "string"
+			},
+			{
+				"name": "val",
+				"type": "int256",
+				"indexed": false,
+				"internalType": "int256"
+			},
+			{
+				"name": "decimals",
+				"type": "uint256",
+				"indexed": false,
+				"internalType": "uint256"
+			}
+		],
+		"anonymous": false
+	},
+	{
+		"type": "event",
+		"name": "log_named_decimal_uint",
+		"inputs": [
+			{
+				"name": "key",
+				"type": "string",
+				"indexed": false,
+				"internalType": "string"
+			},
+			{
+				"name": "val",
+				"type": "uint256",
+				"indexed": false,
+				"internalType": "uint256"
+			},
+			{
+				"name": "decimals",
+				"type": "uint256",
+				"indexed": false,
+				"internalType": "uint256"
+			}
+		],
+		"anonymous": false
+	},
+	{
+		"type": "event",
+		"name": "log_named_int",
+		"inputs": [
+			{
+				"name": "key",
+				"type": "string",
+				"indexed": false,
+				"internalType": "string"
+			},
+			{
+				"name": "val",
+				"type": "int256",
+				"indexed": false,
+				"internalType": "int256"
+			}
+		],
+		"anonymous": false
+	},
+	{
+		"type": "event",
+		"name": "log_named_string",
+		"inputs": [
+			{
+				"name": "key",
+				"type": "string",
+				"indexed": false,
+				"internalType": "string"
+			},
+			{
+				"name": "val",
+				"type": "string",
+				"indexed": false,
+				"internalType": "string"
+			}
+		],
+		"anonymous": false
+	},
+	{
+		"type": "event",
+		"name": "log_named_uint",
+		"inputs": [
+			{
+				"name": "key",
+				"type": "string",
+				"indexed": false,
+				"internalType": "string"
+			},
+			{
+				"name": "val",
+				"type": "uint256",
+				"indexed": false,
+				"internalType": "uint256"
+			}
+		],
+		"anonymous": false
+	},
+	{
+		"type": "event",
+		"name": "log_string",
+		"inputs": [
+			{
+				"name": "",
+				"type": "string",
+				"indexed": false,
+				"internalType": "string"
+			}
+		],
+		"anonymous": false
+	},
+	{
+		"type": "event",
+		"name": "log_uint",
+		"inputs": [
+			{
+				"name": "",
+				"type": "uint256",
+				"indexed": false,
+				"internalType": "uint256"
+			}
+		],
+		"anonymous": false
+	},
+	{
+		"type": "event",
+		"name": "logs",
+		"inputs": [
+			{
+				"name": "",
+				"type": "bytes",
+				"indexed": false,
+				"internalType": "bytes"
+			}
+		],
+		"anonymous": false
+	},
+	{
+		"type": "error",
+		"name": "AddressEmptyCode",
+		"inputs": [
+			{
+				"name": "target",
+				"type": "address",
+				"internalType": "address"
+			}
+		]
+	},
+	{
+		"type": "error",
+		"name": "AddressInsufficientBalance",
+		"inputs": [
+			{
+				"name": "account",
+				"type": "address",
+				"internalType": "address"
+			}
+		]
+	},
+	{
+		"type": "error",
+		"name": "FailedInnerCall",
+		"inputs": []
+	},
+	{
+		"type": "error",
+		"name": "InvalidInitialization",
+		"inputs": []
+	},
+	{
+		"type": "error",
+		"name": "NotInitializing",
+		"inputs": []
+	},
+	{
+		"type": "error",
+		"name": "OwnableInvalidOwner",
+		"inputs": [
+			{
+				"name": "owner",
+				"type": "address",
+				"internalType": "address"
+			}
+		]
+	},
+	{
+		"type": "error",
+		"name": "OwnableUnauthorizedAccount",
+		"inputs": [
+			{
+				"name": "account",
+				"type": "address",
+				"internalType": "address"
+			}
+		]
+	},
+	{
+		"type": "error",
+		"name": "SafeERC20FailedOperation",
+		"inputs": [
+			{
+				"name": "token",
+				"type": "address",
+				"internalType": "address"
+			}
+		]
+	}
+]

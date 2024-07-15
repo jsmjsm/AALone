@@ -345,7 +345,7 @@ contract PoolManager is PoolManagerConfigurator, IPoolManager, Test {
         (uint256 feeForPool, uint256 feeForProtocal) = calculateAccumulatedDebt(
             userPoolReserveInformation.debt,
             userPoolConfig.interestRate,
-            poolManagerConfig.PROTOCAL_FEE_INTEREST_RATE,
+            poolManagerConfig.PROTOCOL_FEE_INTEREST_RATE,
             userPoolReserveInformation.timeStampIndex
         );
 
@@ -382,7 +382,7 @@ contract PoolManager is PoolManagerConfigurator, IPoolManager, Test {
         (uint256 feeForPool, uint256 feeForProtocal) = calculateAccumulatedDebt(
             userPoolReserveInformation.debt,
             userPoolConfig.interestRate,
-            poolManagerConfig.PROTOCAL_FEE_INTEREST_RATE,
+            poolManagerConfig.PROTOCOL_FEE_INTEREST_RATE,
             userPoolReserveInformation.timeStampIndex
         );
 

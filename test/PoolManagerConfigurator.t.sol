@@ -30,7 +30,7 @@ contract PoolManagerStorageTest is Test {
                 DEFAULT_LIQUIDATION_THRESHOLD: 5000,
                 DEFAULT_POOL_INTEREST_RATE: 500,
                 DEFAULT_LTV: 500,
-                PROTOCAL_FEE_INTEREST_RATE: 100,
+                PROTOCOL_FEE_INTEREST_RATE: 100,
                 USDT: mockUSDT,
                 FBTC0: mockFBTC0,
                 FBTC1: mockFBTC1,
@@ -47,7 +47,7 @@ contract PoolManagerStorageTest is Test {
 
         assertEq(storedConfig.DEFAULT_POOL_INTEREST_RATE, 500);
         assertEq(storedConfig.DEFAULT_LTV, 500);
-        assertEq(storedConfig.PROTOCAL_FEE_INTEREST_RATE, 100);
+        assertEq(storedConfig.PROTOCOL_FEE_INTEREST_RATE, 100);
         assertEq(address(storedConfig.USDT), address(mockUSDT));
         assertEq(address(storedConfig.FBTC0), address(mockFBTC0));
         assertEq(address(storedConfig.FBTC1), address(mockFBTC1));
@@ -64,7 +64,7 @@ contract PoolManagerStorageTest is Test {
                 DEFAULT_LIQUIDATION_THRESHOLD: 5000,
                 DEFAULT_POOL_INTEREST_RATE: 500,
                 DEFAULT_LTV: 500,
-                PROTOCAL_FEE_INTEREST_RATE: 100,
+                PROTOCOL_FEE_INTEREST_RATE: 100,
                 USDT: mockUSDT,
                 FBTC0: mockFBTC0,
                 FBTC1: mockFBTC1,
