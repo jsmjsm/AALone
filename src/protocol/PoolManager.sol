@@ -150,7 +150,11 @@ contract PoolManager is PoolManagerConfigurator, IPoolManager {
 
         userPoolReserveInformation.debt -= amount;
         userPoolReserveInformation.debtToProtocol -= repayAmountToProtocol;
-        poolManagerReserveInformation.debt -= amount;
+
+        // @dev Update the pool manager's debt, prevent underflow
+        poolManagerReserveInformation.debt >= amount
+            ? poolManagerReserveInformation.debt -= amount
+            : poolManagerReserveInformation.debt = 0;
 
         emit Repay(msg.sender, amount, userPoolReserveInformation);
     }
