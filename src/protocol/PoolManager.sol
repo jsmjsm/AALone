@@ -355,6 +355,8 @@ contract PoolManager is PoolManagerConfigurator, IPoolManager {
             storage userPoolReserveInformation = _userPoolReserveInformation[
                 user
             ];
+        DataTypes.PoolManagerReserveInformation
+            storage poolManagerReserveInformation = _poolManagerReserveInformation;
 
         (uint256 feeForPool, uint256 feeForProtocol) = calculateAccumulatedDebt(
             userPoolReserveInformation.debt,
@@ -368,6 +370,9 @@ contract PoolManager is PoolManagerConfigurator, IPoolManager {
         userPoolReserveInformation.debtToProtocol += feeForProtocol;
         _protocolProfitUnclaimed += feeForProtocol;
         _protocolProfitAccumulate += feeForProtocol;
+
+        // Fix: updtae poolManagerReserveInformation.debt when user's debt is updated
+        poolManagerReserveInformation.debt += feeForPool + feeForProtocol;
     }
 
     //------------------------view functions--------------------------
