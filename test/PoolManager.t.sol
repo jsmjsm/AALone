@@ -323,6 +323,43 @@ contract PoolManagerTest is Test {
         poolManager.repay(repayAmount);
     }
 
+    function testRepayAll_Success() public {
+        uint256 price = 60000 * 10 ** OracleDecimal;
+        uint256 supplyAmount = 1000 * 10 ** FBTCDecimal;
+        uint256 borrowAmount = ((1000 * 60000 * ltv) / denominator) *
+            10 ** USDTDecimal;
+        aggregatorMock.setLatestAnswer(int(price));
+
+        vm.startPrank(avalonUSDTVault);
+        mockUSDT.mint(avalonUSDTVault, borrowAmount);
+        mockUSDT.approve(address(poolManager), borrowAmount);
+        vm.stopPrank();
+
+        vm.prank(user);
+        vm.expectRevert("Pool not initialized");
+        poolManager.repay(1);
+
+        vm.prank(poolAdmin);
+        poolManager.createPool(user);
+
+        vm.startPrank(user);
+        mockFBTC0.mint(user, supplyAmount);
+        mockFBTC0.approve(address(poolManager), supplyAmount);
+        poolManager.supply(supplyAmount);
+        poolManager.borrow(borrowAmount);
+        poolManager.claimUSDT(borrowAmount);
+
+        skip(365 days);
+
+        DataTypes.UserPoolReserveInformation memory reserveInfo = poolManager
+            .getUserPoolReserveInformation(user);
+
+        uint256 repayAllAmount = reserveInfo.debt;
+        mockUSDT.mint(user, repayAllAmount);
+        mockUSDT.approve(address(poolManager), repayAllAmount);
+        poolManager.repay(repayAllAmount);
+    }
+
     function testLiquidate_Failed() public {
         uint256 price = 60000 * 10 ** OracleDecimal;
         uint256 supplyAmount = 1000 * 10 ** FBTCDecimal;
