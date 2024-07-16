@@ -80,15 +80,15 @@ contract PoolManagerConfigurator is PoolManagerStorage, OwnableUpgradeable {
      * @return The amount of unclaimed protocol profit as a uint256.
      */
     function getProtocolProfitUnclaimed() external view returns (uint256) {
-        return _protocalProfitUnclaimed;
+        return _protocolProfitUnclaimed;
     }
 
     /**
      * @dev Returns the accumulated protocol profit.
      * @return The total accumulated protocol profit as a uint256.
      */
-    function getProtocalProfitAccumulate() external view returns (uint256) {
-        return _protocalProfitAccumulate;
+    function getProtocolProfitAccumulate() external view returns (uint256) {
+        return _protocolProfitAccumulate;
     }
 
     /**

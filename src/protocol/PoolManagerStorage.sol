@@ -11,10 +11,10 @@ contract PoolManagerStorage {
     uint256 public constant DENOMINATOR = 10000;
 
     // Unclaimed protocol profit
-    uint256 internal _protocalProfitUnclaimed;
+    uint256 internal _protocolProfitUnclaimed;
 
     // Accumulated protocol profit
-    uint256 internal _protocalProfitAccumulate;
+    uint256 internal _protocolProfitAccumulate;
 
     // Configuration data for the pool manager
     DataTypes.PoolManagerConfig internal _poolManagerConfig;

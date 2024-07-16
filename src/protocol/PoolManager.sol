@@ -302,7 +302,7 @@ contract PoolManager is PoolManagerConfigurator, IPoolManager {
             memory poolManagerConfig = _poolManagerConfig;
         uint256 claimAmount = poolManagerConfig.USDT.balanceOf(address(this));
         poolManagerConfig.USDT.safeTransfer(msg.sender, claimAmount);
-        _protocalProfitUnclaimed -= claimAmount;
+        _protocolProfitUnclaimed -= claimAmount;
     }
 
     /**
@@ -356,7 +356,7 @@ contract PoolManager is PoolManagerConfigurator, IPoolManager {
                 user
             ];
 
-        (uint256 feeForPool, uint256 feeForProtocal) = calculateAccumulatedDebt(
+        (uint256 feeForPool, uint256 feeForProtocol) = calculateAccumulatedDebt(
             userPoolReserveInformation.debt,
             userPoolConfig.poolInterestRate,
             userPoolConfig.protocolInterestRate,
@@ -364,10 +364,10 @@ contract PoolManager is PoolManagerConfigurator, IPoolManager {
         );
 
         userPoolReserveInformation.timeStampIndex = uint40(block.timestamp);
-        userPoolReserveInformation.debt += feeForPool + feeForProtocal;
-        userPoolReserveInformation.debtToProtocol += feeForProtocal;
-        _protocalProfitUnclaimed += feeForProtocal;
-        _protocalProfitAccumulate += feeForProtocal;
+        userPoolReserveInformation.debt += feeForPool + feeForProtocol;
+        userPoolReserveInformation.debtToProtocol += feeForProtocol;
+        _protocolProfitUnclaimed += feeForProtocol;
+        _protocolProfitAccumulate += feeForProtocol;
     }
 
     //------------------------view functions--------------------------
@@ -391,7 +391,7 @@ contract PoolManager is PoolManagerConfigurator, IPoolManager {
             memory userPoolReserveInformation = _userPoolReserveInformation[
                 user
             ];
-        (uint256 feeForPool, uint256 feeForProtocal) = calculateAccumulatedDebt(
+        (uint256 feeForPool, uint256 feeForProtocol) = calculateAccumulatedDebt(
             userPoolReserveInformation.debt,
             userPoolConfig.poolInterestRate,
             userPoolConfig.protocolInterestRate,
@@ -409,10 +409,10 @@ contract PoolManager is PoolManagerConfigurator, IPoolManager {
         reserveAfterUpdateDebt.debt =
             userPoolReserveInformation.debt +
             feeForPool +
-            feeForProtocal;
+            feeForProtocol;
         reserveAfterUpdateDebt.debtToProtocol =
             userPoolReserveInformation.debtToProtocol +
-            feeForProtocal;
+            feeForProtocol;
     }
 
     /**
@@ -422,14 +422,14 @@ contract PoolManager is PoolManagerConfigurator, IPoolManager {
      * @param protocolInterestRate The interest rate for the protocol.
      * @param timeStampIndex The timestamp when the borrowing occurred.
      * @return feeForPool The calculated interest fee for the pool.
-     * @return feeForProtocal The calculated interest fee for the protocol.
+     * @return feeForProtocol The calculated interest fee for the protocol.
      */
     function calculateAccumulatedDebt(
         uint256 debt,
         uint256 poolInterestRate,
         uint256 protocolInterestRate,
         uint40 timeStampIndex
-    ) public view returns (uint256 feeForPool, uint256 feeForProtocal) {
+    ) public view returns (uint256 feeForPool, uint256 feeForProtocol) {
         feeForPool =
             debt.rayMul(
                 MathUtils.calculateCompoundedInterest(
@@ -440,7 +440,7 @@ contract PoolManager is PoolManagerConfigurator, IPoolManager {
             debt;
 
         // Calculate the fee for the protocol based on the protocol fee interest rate and borrowed timestamp
-        feeForProtocal =
+        feeForProtocol =
             debt.rayMul(
                 MathUtils.calculateCompoundedInterest(
                     (protocolInterestRate * WadRayMath.RAY) / DENOMINATOR,
