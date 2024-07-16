@@ -1,6 +1,5 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.13;
-import "forge-std/Test.sol";
 import "./PoolManagerConfigurator.sol";
 import "./library/math/MathUtils.sol";
 import "./library/math/WadRayMath.sol";
@@ -12,7 +11,7 @@ import "@openzeppelin/contracts/token/ERC20/extensions/IERC20Metadata.sol";
  * @title PoolManager
  * @dev Manages liquidity pools and related operations.
  */
-contract PoolManager is PoolManagerConfigurator, IPoolManager, Test {
+contract PoolManager is PoolManagerConfigurator, IPoolManager {
     using WadRayMath for uint256;
     using MathUtils for uint256;
     using SafeERC20 for IERC20;
@@ -29,8 +28,10 @@ contract PoolManager is PoolManagerConfigurator, IPoolManager, Test {
         DataTypes.UserPoolConfig storage userPoolConfig = _userPoolConfig[user];
         require(!userPoolConfig.init, "Pool already initialized");
         userPoolConfig.init = true;
-        userPoolConfig.interestRate = poolManagerConfig
+        userPoolConfig.poolInterestRate = poolManagerConfig
             .DEFAULT_POOL_INTEREST_RATE;
+        userPoolConfig.protocolInterestRate = poolManagerConfig
+            .PROTOCOL_FEE_INTEREST_RATE;
         userPoolConfig.liquidationThreshold = poolManagerConfig
             .DEFAULT_LIQUIDATION_THRESHOLD;
         userPoolConfig.loanToValue = poolManagerConfig.DEFAULT_LTV;
@@ -197,6 +198,15 @@ contract PoolManager is PoolManagerConfigurator, IPoolManager, Test {
         emit Withdraw(msg.sender, amount, userPoolReserveInformation);
     }
 
+    /**
+     * @dev Liquidates a portion of the user's collateral and debt.
+     * @param user The address of the user being liquidated.
+     * @param collateralDecrease The amount of collateral to decrease.
+     * @param debtDecrease The amount of debt to decrease.
+     * Requirements:
+     * - The pool must have been initialized.
+     * - Only the owner can call this function.
+     */
     function liquidate(
         address user,
         uint256 collateralDecrease,
@@ -224,7 +234,7 @@ contract PoolManager is PoolManagerConfigurator, IPoolManager, Test {
     }
 
     /**
-     * @dev Borrows tokens from the pool.
+     * @dev Claims USDT from the pool.
      * @param amount The amount of tokens to claimUSDT.
      * Requirements:
      * - The pool must have been initialized.
@@ -255,7 +265,7 @@ contract PoolManager is PoolManagerConfigurator, IPoolManager, Test {
     }
 
     /**
-     * @dev Withdraws tokens from the pool.
+     * @dev Claim FBTC0 from the pool.
      * @param amount The amount of tokens to claimBTC.
      * Requirements:
      * - The pool must have been initialized.
@@ -291,12 +301,12 @@ contract PoolManager is PoolManagerConfigurator, IPoolManager, Test {
         DataTypes.PoolManagerConfig
             memory poolManagerConfig = _poolManagerConfig;
         uint256 claimAmount = poolManagerConfig.USDT.balanceOf(address(this));
-        poolManagerConfig.USDT.transfer(msg.sender, claimAmount);
+        poolManagerConfig.USDT.safeTransfer(msg.sender, claimAmount);
         _protocalProfitUnclaimed -= claimAmount;
     }
 
     /**
-     * @dev Confirms the minting of FBTC0 tokens.
+     * @dev Requests the minting of FBTC0 tokens.
      * @param amount The amount of FBTC0 tokens.
      * @param depositTxid The transaction ID of the deposit.
      * @param outputIndex The output index of the deposit transaction.
@@ -318,6 +328,13 @@ contract PoolManager is PoolManagerConfigurator, IPoolManager, Test {
         emit RequestMintFBTC0(amount, depositTxid, outputIndex);
     }
 
+    /**
+     * @dev Sets the user's pool configuration.
+     * @param user The address of the user.
+     * @param configInput The user's pool configuration settings.
+     * Requirements:
+     * - Only the owner can call this function.
+     */
     function setUserPoolConfig(
         address user,
         DataTypes.UserPoolConfig calldata configInput
@@ -331,9 +348,6 @@ contract PoolManager is PoolManagerConfigurator, IPoolManager, Test {
      * @param user The address of the user.
      */
     function updateState(address user) internal {
-        // Load the pool manager configuration into memory
-        DataTypes.PoolManagerConfig
-            memory poolManagerConfig = _poolManagerConfig;
         // Load the user's pool configuration into memory
         DataTypes.UserPoolConfig memory userPoolConfig = _userPoolConfig[user];
         // Load the user's pool reserve information into storage
@@ -344,8 +358,8 @@ contract PoolManager is PoolManagerConfigurator, IPoolManager, Test {
 
         (uint256 feeForPool, uint256 feeForProtocal) = calculateAccumulatedDebt(
             userPoolReserveInformation.debt,
-            userPoolConfig.interestRate,
-            poolManagerConfig.PROTOCAL_FEE_INTEREST_RATE,
+            userPoolConfig.poolInterestRate,
+            userPoolConfig.protocolInterestRate,
             userPoolReserveInformation.timeStampIndex
         );
 
@@ -372,8 +386,6 @@ contract PoolManager is PoolManagerConfigurator, IPoolManager, Test {
             DataTypes.UserPoolReserveInformation memory reserveAfterUpdateDebt
         )
     {
-        DataTypes.PoolManagerConfig
-            memory poolManagerConfig = _poolManagerConfig;
         DataTypes.UserPoolConfig memory userPoolConfig = _userPoolConfig[user];
         DataTypes.UserPoolReserveInformation
             memory userPoolReserveInformation = _userPoolReserveInformation[
@@ -381,8 +393,8 @@ contract PoolManager is PoolManagerConfigurator, IPoolManager, Test {
             ];
         (uint256 feeForPool, uint256 feeForProtocal) = calculateAccumulatedDebt(
             userPoolReserveInformation.debt,
-            userPoolConfig.interestRate,
-            poolManagerConfig.PROTOCAL_FEE_INTEREST_RATE,
+            userPoolConfig.poolInterestRate,
+            userPoolConfig.protocolInterestRate,
             userPoolReserveInformation.timeStampIndex
         );
 

@@ -28,7 +28,7 @@ contract FBTCOracle is IFBTCOracle, Ownable {
      * @dev Sets a new price aggregator source.
      * @param source The new price aggregator source.
      * Requirements:
-     * - This function could have access control to restrict who can call it.
+     * - Can only be called by the contract owner.
      */
     function setAssetSource(AggregatorInterface source) external onlyOwner {
         assetSource = source;
@@ -43,6 +43,10 @@ contract FBTCOracle is IFBTCOracle, Ownable {
         return uint256(price);
     }
 
+    /**
+     * @dev Gets the number of decimals used by the price aggregator.
+     * @return The number of decimals as a uint8.
+     */
     function decimals() public view returns (uint8) {
         return assetSource.decimals();
     }
