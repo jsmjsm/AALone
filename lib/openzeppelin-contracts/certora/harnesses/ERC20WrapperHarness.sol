@@ -12,8 +12,8 @@ contract ERC20WrapperHarness is ERC20Permit, ERC20Wrapper {
         string memory _symbol
     ) ERC20(_name, _symbol) ERC20Permit(_name) ERC20Wrapper(_underlying) {}
 
-    function underlyingTotalSupply() public view returns (uint256) {
-        return underlying().totalSupply();
+    function underlyingcollateral() public view returns (uint256) {
+        return underlying().collateral();
     }
 
     function underlyingBalanceOf(address account) public view returns (uint256) {

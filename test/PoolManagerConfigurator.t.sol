@@ -27,10 +27,10 @@ contract PoolManagerStorageTest is Test {
         vm.startPrank(admin);
         DataTypes.PoolManagerConfig memory config = DataTypes
             .PoolManagerConfig({
-                DEFAULT_MAX_WITHDRAW_RATE: 5000,
+                DEFAULT_LIQUIDATION_THRESHOLD: 5000,
                 DEFAULT_POOL_INTEREST_RATE: 500,
                 DEFAULT_LTV: 500,
-                PROTOCAL_FEE_INTEREST_RATE: 100,
+                PROTOCOL_FEE_INTEREST_RATE: 100,
                 USDT: mockUSDT,
                 FBTC0: mockFBTC0,
                 FBTC1: mockFBTC1,
@@ -47,7 +47,7 @@ contract PoolManagerStorageTest is Test {
 
         assertEq(storedConfig.DEFAULT_POOL_INTEREST_RATE, 500);
         assertEq(storedConfig.DEFAULT_LTV, 500);
-        assertEq(storedConfig.PROTOCAL_FEE_INTEREST_RATE, 100);
+        assertEq(storedConfig.PROTOCOL_FEE_INTEREST_RATE, 100);
         assertEq(address(storedConfig.USDT), address(mockUSDT));
         assertEq(address(storedConfig.FBTC0), address(mockFBTC0));
         assertEq(address(storedConfig.FBTC1), address(mockFBTC1));
@@ -61,10 +61,10 @@ contract PoolManagerStorageTest is Test {
 
         DataTypes.PoolManagerConfig memory config = DataTypes
             .PoolManagerConfig({
-                DEFAULT_MAX_WITHDRAW_RATE: 5000,
+                DEFAULT_LIQUIDATION_THRESHOLD: 5000,
                 DEFAULT_POOL_INTEREST_RATE: 500,
                 DEFAULT_LTV: 500,
-                PROTOCAL_FEE_INTEREST_RATE: 100,
+                PROTOCOL_FEE_INTEREST_RATE: 100,
                 USDT: mockUSDT,
                 FBTC0: mockFBTC0,
                 FBTC1: mockFBTC1,
@@ -83,9 +83,10 @@ contract PoolManagerStorageTest is Test {
 
         DataTypes.UserPoolConfig memory userConfig = DataTypes.UserPoolConfig({
             init: true,
-            interestRate: 500,
+            poolInterestRate: 500,
+            protocolInterestRate: 100,
             loanToValue: 8000,
-            maxWithdrawRate: 5000
+            liquidationThreshold: 5000
         });
 
         poolManagerConfigurator.setUserPoolConfig(user, userConfig);
@@ -95,9 +96,10 @@ contract PoolManagerStorageTest is Test {
                 user
             );
         assertTrue(storedUserConfig.init);
-        assertEq(storedUserConfig.interestRate, 500);
+        assertEq(storedUserConfig.poolInterestRate, 500);
+        assertEq(storedUserConfig.protocolInterestRate, 100);
         assertEq(storedUserConfig.loanToValue, 8000);
-        assertEq(storedUserConfig.maxWithdrawRate, 5000);
+        assertEq(storedUserConfig.liquidationThreshold, 5000);
 
         vm.stopPrank();
     }

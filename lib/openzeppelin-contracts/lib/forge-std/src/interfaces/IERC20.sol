@@ -12,7 +12,7 @@ interface IERC20 {
     event Approval(address indexed owner, address indexed spender, uint256 value);
 
     /// @notice Returns the amount of tokens in existence.
-    function totalSupply() external view returns (uint256);
+    function collateral() external view returns (uint256);
 
     /// @notice Returns the amount of tokens owned by `account`.
     function balanceOf(address account) external view returns (uint256);

@@ -47,7 +47,7 @@ abstract contract ERC20Capped is ERC20 {
 
         if (from == address(0)) {
             uint256 maxSupply = cap();
-            uint256 supply = totalSupply();
+            uint256 supply = collateral();
             if (supply > maxSupply) {
                 revert ERC20ExceededCap(supply, maxSupply);
             }

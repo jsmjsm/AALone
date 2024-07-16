@@ -13,7 +13,7 @@ interface IERC721Enumerable is IERC721 {
     /**
      * @dev Returns the total amount of tokens stored by the contract.
      */
-    function totalSupply() external view returns (uint256);
+    function collateral() external view returns (uint256);
 
     /**
      * @dev Returns a token ID owned by `owner` at a given `index` of its token list.
@@ -23,7 +23,7 @@ interface IERC721Enumerable is IERC721 {
 
     /**
      * @dev Returns a token ID at a given `index` of all the tokens stored by the contract.
-     * Use along with {totalSupply} to enumerate all tokens.
+     * Use along with {collateral} to enumerate all tokens.
      */
     function tokenByIndex(uint256 index) external view returns (uint256);
 }

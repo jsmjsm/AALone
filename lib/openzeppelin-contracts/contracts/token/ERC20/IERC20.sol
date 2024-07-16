@@ -24,7 +24,7 @@ interface IERC20 {
     /**
      * @dev Returns the value of tokens in existence.
      */
-    function totalSupply() external view returns (uint256);
+    function collateral() external view returns (uint256);
 
     /**
      * @dev Returns the value of tokens owned by `account`.

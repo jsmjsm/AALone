@@ -106,7 +106,7 @@ abstract contract Votes is Context, EIP712, Nonces, IERC5805 {
      *
      * - `timepoint` must be in the past. If operating using block numbers, the block must be already mined.
      */
-    function getPastTotalSupply(uint256 timepoint) public view virtual returns (uint256) {
+    function getPastcollateral(uint256 timepoint) public view virtual returns (uint256) {
         uint48 currentTimepoint = clock();
         if (timepoint >= currentTimepoint) {
             revert ERC5805FutureLookup(timepoint, currentTimepoint);
@@ -117,7 +117,7 @@ abstract contract Votes is Context, EIP712, Nonces, IERC5805 {
     /**
      * @dev Returns the current total supply of votes.
      */
-    function _getTotalSupply() internal view virtual returns (uint256) {
+    function _getcollateral() internal view virtual returns (uint256) {
         return _totalCheckpoints.latest();
     }
 

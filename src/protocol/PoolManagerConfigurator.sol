@@ -6,8 +6,21 @@ import "@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol";
 
 /**
  * @title PoolManagerConfigurator
+ * @dev Contract for configuring and managing pool settings and user-specific configurations.
  */
 contract PoolManagerConfigurator is PoolManagerStorage, OwnableUpgradeable {
+    /**
+     * @dev Modifier to check if the user's pool is initialized.
+     */
+    modifier onlyInitializedPool() {
+        require(_userPoolConfig[msg.sender].init, "Pool not initialized");
+        _;
+    }
+
+    /**
+     * @dev Initializes the contract with the specified owner.
+     * @param owner The address of the contract owner.
+     */
     function initialize(address owner) public initializer {
         __Ownable_init(owner);
     }
@@ -16,7 +29,7 @@ contract PoolManagerConfigurator is PoolManagerStorage, OwnableUpgradeable {
      * @dev Sets the configuration for the pool manager.
      * @param configInput The configuration data for the pool manager.
      * Requirements:
-     * - The caller must have the POOL_ADMIN_ROLE.
+     * - The caller must be the owner of the contract.
      */
     function setPoolManagerConfig(
         DataTypes.PoolManagerConfig calldata configInput
@@ -29,12 +42,12 @@ contract PoolManagerConfigurator is PoolManagerStorage, OwnableUpgradeable {
      * @param user The address of the user.
      * @param configInput The configuration data for the user's pool.
      * Requirements:
-     * - The caller must have the POOL_ADMIN_ROLE.
+     * - The caller must be the owner of the contract.
      */
     function setUserPoolConfig(
         address user,
         DataTypes.UserPoolConfig calldata configInput
-    ) external onlyOwner {
+    ) external virtual onlyOwner {
         _userPoolConfig[user] = configInput;
     }
 
@@ -51,8 +64,20 @@ contract PoolManagerConfigurator is PoolManagerStorage, OwnableUpgradeable {
     }
 
     /**
+     * @dev Returns the pool manager reserve information.
+     * @return The pool manager reserve information as a `DataTypes.PoolManagerReserveInformation` struct.
+     */
+    function getPoolManagerReserveInformation()
+        external
+        view
+        returns (DataTypes.PoolManagerReserveInformation memory)
+    {
+        return _poolManagerReserveInformation;
+    }
+
+    /**
      * @dev Returns the unclaimed protocol profit.
-     * @return The amount of unclaimed protocol profit.
+     * @return The amount of unclaimed protocol profit as a uint256.
      */
     function getProtocolProfitUnclaimed() external view returns (uint256) {
         return _protocalProfitUnclaimed;
@@ -60,14 +85,25 @@ contract PoolManagerConfigurator is PoolManagerStorage, OwnableUpgradeable {
 
     /**
      * @dev Returns the accumulated protocol profit.
-     * @return The total accumulated protocol profit.
+     * @return The total accumulated protocol profit as a uint256.
      */
     function getProtocalProfitAccumulate() external view returns (uint256) {
         return _protocalProfitAccumulate;
     }
 
     /**
-     * @dev Returns the user's pool reserve information.
+     * @dev Returns the configuration of a user's pool.
+     * @param user The address of the user.
+     * @return The user's pool configuration as a `DataTypes.UserPoolConfig` struct.
+     */
+    function getUserPoolConfig(
+        address user
+    ) external view returns (DataTypes.UserPoolConfig memory) {
+        return _userPoolConfig[user];
+    }
+
+    /**
+     * @dev Returns the reserve information of a user's pool.
      * @param user The address of the user.
      * @return The user's pool reserve information as a `DataTypes.UserPoolReserveInformation` struct.
      */
@@ -80,16 +116,5 @@ contract PoolManagerConfigurator is PoolManagerStorage, OwnableUpgradeable {
         returns (DataTypes.UserPoolReserveInformation memory)
     {
         return _userPoolReserveInformation[user];
-    }
-
-    /**
-     * @dev Returns the user's pool configuration.
-     * @param user The address of the user.
-     * @return The user's pool configuration as a `DataTypes.UserPoolConfig` struct.
-     */
-    function getUserPoolConfig(
-        address user
-    ) external view returns (DataTypes.UserPoolConfig memory) {
-        return _userPoolConfig[user];
     }
 }

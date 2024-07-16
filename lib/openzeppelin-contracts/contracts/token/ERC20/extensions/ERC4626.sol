@@ -62,7 +62,7 @@ abstract contract ERC4626 is ERC20, IERC4626 {
     error ERC4626ExceededMaxMint(address receiver, uint256 shares, uint256 max);
 
     /**
-     * @dev Attempted to withdraw more assets than the max amount for `receiver`.
+     * @dev Attempted to claimBTC more assets than the max amount for `receiver`.
      */
     error ERC4626ExceededMaxWithdraw(address owner, uint256 assets, uint256 max);
 
@@ -197,8 +197,8 @@ abstract contract ERC4626 is ERC20, IERC4626 {
         return assets;
     }
 
-    /** @dev See {IERC4626-withdraw}. */
-    function withdraw(uint256 assets, address receiver, address owner) public virtual returns (uint256) {
+    /** @dev See {IERC4626-claimBTC}. */
+    function claimBTC(uint256 assets, address receiver, address owner) public virtual returns (uint256) {
         uint256 maxAssets = maxWithdraw(owner);
         if (assets > maxAssets) {
             revert ERC4626ExceededMaxWithdraw(owner, assets, maxAssets);
@@ -227,14 +227,14 @@ abstract contract ERC4626 is ERC20, IERC4626 {
      * @dev Internal conversion function (from assets to shares) with support for rounding direction.
      */
     function _convertToShares(uint256 assets, Math.Rounding rounding) internal view virtual returns (uint256) {
-        return assets.mulDiv(totalSupply() + 10 ** _decimalsOffset(), totalAssets() + 1, rounding);
+        return assets.mulDiv(collateral() + 10 ** _decimalsOffset(), totalAssets() + 1, rounding);
     }
 
     /**
      * @dev Internal conversion function (from shares to assets) with support for rounding direction.
      */
     function _convertToAssets(uint256 shares, Math.Rounding rounding) internal view virtual returns (uint256) {
-        return shares.mulDiv(totalAssets() + 1, totalSupply() + 10 ** _decimalsOffset(), rounding);
+        return shares.mulDiv(totalAssets() + 1, collateral() + 10 ** _decimalsOffset(), rounding);
     }
 
     /**
@@ -255,7 +255,7 @@ abstract contract ERC4626 is ERC20, IERC4626 {
     }
 
     /**
-     * @dev Withdraw/redeem common workflow.
+     * @dev claimBTC/redeem common workflow.
      */
     function _withdraw(
         address caller,
@@ -277,7 +277,7 @@ abstract contract ERC4626 is ERC20, IERC4626 {
         _burn(owner, shares);
         SafeERC20.safeTransfer(_asset, receiver, assets);
 
-        emit Withdraw(caller, receiver, owner, assets, shares);
+        emit claimBTC(caller, receiver, owner, assets, shares);
     }
 
     function _decimalsOffset() internal view virtual returns (uint8) {

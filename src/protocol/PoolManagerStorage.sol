@@ -10,9 +10,10 @@ import "./library/type/DataTypes.sol";
 contract PoolManagerStorage {
     uint256 public constant DENOMINATOR = 10000;
 
-    // Protocol profit
+    // Unclaimed protocol profit
     uint256 internal _protocalProfitUnclaimed;
-    // Protocol profit accumulated
+
+    // Accumulated protocol profit
     uint256 internal _protocalProfitAccumulate;
 
     // Configuration data for the pool manager
@@ -24,4 +25,8 @@ contract PoolManagerStorage {
 
     // Mapping of user addresses to their pool configuration
     mapping(address => DataTypes.UserPoolConfig) internal _userPoolConfig;
+
+    // Reserve information for the entire pool manager
+    DataTypes.PoolManagerReserveInformation
+        internal _poolManagerReserveInformation;
 }

@@ -283,7 +283,7 @@ interface IGovernor is IERC165, IERC6372 {
      * @dev Minimum number of cast voted required for a proposal to be successful.
      *
      * NOTE: The `timepoint` parameter corresponds to the snapshot used for counting vote. This allows to scale the
-     * quorum depending on values such as the totalSupply of a token at this timepoint (see {ERC20Votes}).
+     * quorum depending on values such as the collateral of a token at this timepoint (see {ERC20Votes}).
      */
     function quorum(uint256 timepoint) external view returns (uint256);
 

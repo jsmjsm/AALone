@@ -48,7 +48,7 @@ abstract contract ERC20Votes is ERC20, Votes {
     function _update(address from, address to, uint256 value) internal virtual override {
         super._update(from, to, value);
         if (from == address(0)) {
-            uint256 supply = totalSupply();
+            uint256 supply = collateral();
             uint256 cap = _maxSupply();
             if (supply > cap) {
                 revert ERC20ExceededSafeSupply(supply, cap);

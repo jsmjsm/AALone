@@ -36,7 +36,7 @@ abstract contract ERC20 is Context, IERC20, IERC20Metadata, IERC20Errors {
 
     mapping(address account => mapping(address spender => uint256)) private _allowances;
 
-    uint256 private _totalSupply;
+    uint256 private _collateral;
 
     string private _name;
     string private _symbol;
@@ -85,10 +85,10 @@ abstract contract ERC20 is Context, IERC20, IERC20Metadata, IERC20Errors {
     }
 
     /**
-     * @dev See {IERC20-totalSupply}.
+     * @dev See {IERC20-collateral}.
      */
-    function totalSupply() public view virtual returns (uint256) {
-        return _totalSupply;
+    function collateral() public view virtual returns (uint256) {
+        return _collateral;
     }
 
     /**
@@ -187,27 +187,27 @@ abstract contract ERC20 is Context, IERC20, IERC20Metadata, IERC20Errors {
      */
     function _update(address from, address to, uint256 value) internal virtual {
         if (from == address(0)) {
-            // Overflow check required: The rest of the code assumes that totalSupply never overflows
-            _totalSupply += value;
+            // Overflow check required: The rest of the code assumes that collateral never overflows
+            _collateral += value;
         } else {
             uint256 fromBalance = _balances[from];
             if (fromBalance < value) {
                 revert ERC20InsufficientBalance(from, fromBalance, value);
             }
             unchecked {
-                // Overflow not possible: value <= fromBalance <= totalSupply.
+                // Overflow not possible: value <= fromBalance <= collateral.
                 _balances[from] = fromBalance - value;
             }
         }
 
         if (to == address(0)) {
             unchecked {
-                // Overflow not possible: value <= totalSupply or value <= fromBalance <= totalSupply.
-                _totalSupply -= value;
+                // Overflow not possible: value <= collateral or value <= fromBalance <= collateral.
+                _collateral -= value;
             }
         } else {
             unchecked {
-                // Overflow not possible: balance + value is at most totalSupply, which we know fits into a uint256.
+                // Overflow not possible: balance + value is at most collateral, which we know fits into a uint256.
                 _balances[to] += value;
             }
         }

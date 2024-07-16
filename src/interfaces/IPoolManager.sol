@@ -7,43 +7,40 @@ interface IPoolManager {
         address indexed user,
         DataTypes.UserPoolConfig userPoolConfig
     );
-    event TokensSupplied(
+    event Supply(
         address indexed user,
         uint256 amount,
         DataTypes.UserPoolReserveInformation userPoolReserveInformation
     );
 
-    event LoanRequested(
+    event Borrow(
         address indexed user,
         uint256 amount,
         DataTypes.UserPoolReserveInformation userPoolReserveInformation
     );
 
-    event TokensBorrowed(
+    event ClaimUSDT(
         address indexed user,
         uint256 amount,
         DataTypes.UserPoolReserveInformation userPoolReserveInformation
     );
-    event TokensRepaid(
+    event Repay(
         address indexed user,
         uint256 amount,
         DataTypes.UserPoolReserveInformation userPoolReserveInformation
     );
-    event Liquidation(
-        address indexed user,
-        DataTypes.UserPoolReserveInformation userPoolReserveInformation
-    );
-    event WithdrawalRequested(
+    event Liquidation(address indexed user, uint256 collateral, uint256 debt);
+    event Withdraw(
         address indexed user,
         uint256 amount,
         DataTypes.UserPoolReserveInformation userPoolReserveInformation
     );
-    event MintFBTC0Confirmed(
+    event RequestMintFBTC0(
         uint256 amount,
         bytes32 depositTxid,
         uint256 outputIndex
     );
-    event TokensWithdrawn(
+    event ClaimBTC(
         address indexed user,
         uint256 amount,
         DataTypes.UserPoolReserveInformation userPoolReserveInformation

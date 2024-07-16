@@ -46,7 +46,7 @@ abstract contract ERC20FlashMint is ERC20, IERC3156FlashLender {
      * function to integrate the cap instead of `type(uint256).max`.
      */
     function maxFlashLoan(address token) public view virtual returns (uint256) {
-        return token == address(this) ? type(uint256).max - totalSupply() : 0;
+        return token == address(this) ? type(uint256).max - collateral() : 0;
     }
 
     /**

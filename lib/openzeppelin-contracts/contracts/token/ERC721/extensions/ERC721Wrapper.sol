@@ -9,7 +9,7 @@ import {IERC721Receiver} from "../IERC721Receiver.sol";
 /**
  * @dev Extension of the ERC721 token contract to support token wrapping.
  *
- * Users can deposit and withdraw an "underlying token" and receive a "wrapped token" with a matching tokenId. This is
+ * Users can deposit and claimBTC an "underlying token" and receive a "wrapped token" with a matching tokenId. This is
  * useful in conjunction with other modules. For example, combining this wrapping mechanism with {ERC721Votes} will allow
  * the wrapping of an existing "basic" ERC721 into a governance token.
  */
@@ -44,7 +44,7 @@ abstract contract ERC721Wrapper is ERC721, IERC721Receiver {
     }
 
     /**
-     * @dev Allow a user to burn wrapped tokens and withdraw the corresponding tokenIds of the underlying tokens.
+     * @dev Allow a user to burn wrapped tokens and claimBTC the corresponding tokenIds of the underlying tokens.
      */
     function withdrawTo(address account, uint256[] memory tokenIds) public virtual returns (bool) {
         uint256 length = tokenIds.length;

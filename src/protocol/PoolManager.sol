@@ -1,6 +1,5 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.13;
-import "forge-std/Test.sol";
 import "./PoolManagerConfigurator.sol";
 import "./library/math/MathUtils.sol";
 import "./library/math/WadRayMath.sol";
@@ -12,7 +11,7 @@ import "@openzeppelin/contracts/token/ERC20/extensions/IERC20Metadata.sol";
  * @title PoolManager
  * @dev Manages liquidity pools and related operations.
  */
-contract PoolManager is PoolManagerConfigurator, IPoolManager, Test {
+contract PoolManager is PoolManagerConfigurator, IPoolManager {
     using WadRayMath for uint256;
     using MathUtils for uint256;
     using SafeERC20 for IERC20;
@@ -29,11 +28,14 @@ contract PoolManager is PoolManagerConfigurator, IPoolManager, Test {
         DataTypes.UserPoolConfig storage userPoolConfig = _userPoolConfig[user];
         require(!userPoolConfig.init, "Pool already initialized");
         userPoolConfig.init = true;
-        userPoolConfig.interestRate = poolManagerConfig
+        userPoolConfig.poolInterestRate = poolManagerConfig
             .DEFAULT_POOL_INTEREST_RATE;
-        userPoolConfig.maxWithdrawRate = poolManagerConfig
-            .DEFAULT_MAX_WITHDRAW_RATE;
+        userPoolConfig.protocolInterestRate = poolManagerConfig
+            .PROTOCOL_FEE_INTEREST_RATE;
+        userPoolConfig.liquidationThreshold = poolManagerConfig
+            .DEFAULT_LIQUIDATION_THRESHOLD;
         userPoolConfig.loanToValue = poolManagerConfig.DEFAULT_LTV;
+        _poolManagerReserveInformation.userAmount += 1;
         emit PoolCreated(user, userPoolConfig);
     }
 
@@ -43,18 +45,13 @@ contract PoolManager is PoolManagerConfigurator, IPoolManager, Test {
      * Requirements:
      * - The pool must have been initialized.
      */
-    function supply(uint256 amount) external {
+    function supply(uint256 amount) external onlyInitializedPool {
         DataTypes.PoolManagerConfig
             memory poolManagerConfig = _poolManagerConfig;
-        DataTypes.UserPoolConfig storage userPoolConfig = _userPoolConfig[
-            msg.sender
-        ];
         DataTypes.UserPoolReserveInformation
             storage userPoolReserveInformation = _userPoolReserveInformation[
                 msg.sender
             ];
-
-        require(userPoolConfig.init, "Pool not initialized");
 
         poolManagerConfig.FBTC0.safeTransferFrom(
             msg.sender,
@@ -66,8 +63,9 @@ contract PoolManager is PoolManagerConfigurator, IPoolManager, Test {
             amount
         );
         poolManagerConfig.FBTC1.mintLockedFbtcRequest(amount);
-        userPoolReserveInformation.totalSupply += amount;
-        emit TokensSupplied(msg.sender, amount, userPoolReserveInformation);
+        userPoolReserveInformation.collateral += amount;
+        _poolManagerReserveInformation.collateral += amount;
+        emit Supply(msg.sender, amount, userPoolReserveInformation);
     }
 
     /**
@@ -77,7 +75,9 @@ contract PoolManager is PoolManagerConfigurator, IPoolManager, Test {
      * - The pool must have been initialized.
      * - The requested amount must not exceed the allowable loan-to-value ratio.
      */
-    function requestBorrow(uint256 amount) external {
+    function borrow(uint256 amount) external onlyInitializedPool {
+        updateState(msg.sender);
+
         DataTypes.PoolManagerConfig
             memory poolManagerConfig = _poolManagerConfig;
         DataTypes.UserPoolConfig storage userPoolConfig = _userPoolConfig[
@@ -87,14 +87,11 @@ contract PoolManager is PoolManagerConfigurator, IPoolManager, Test {
             storage userPoolReserveInformation = _userPoolReserveInformation[
                 msg.sender
             ];
-
-        require(userPoolConfig.init, "Pool not initialized");
-
         require(
             calculateMaxBorrowAmount(
                 userPoolConfig.loanToValue,
-                userPoolReserveInformation.totalSupply,
-                userPoolReserveInformation.inBorrowing,
+                userPoolReserveInformation.collateral,
+                userPoolReserveInformation.debt,
                 poolManagerConfig.FBTCOracle.getAssetPrice(),
                 IERC20Metadata(address(poolManagerConfig.USDT)).decimals(),
                 IERC20Metadata(address(poolManagerConfig.FBTC0)).decimals(),
@@ -102,44 +99,14 @@ contract PoolManager is PoolManagerConfigurator, IPoolManager, Test {
             ) >= amount,
             "Requested amount exceeds allowable loanToValue"
         );
-        userPoolReserveInformation.inBorrowing += amount;
-        emit LoanRequested(msg.sender, amount, userPoolReserveInformation);
-    }
 
-    /**
-     * @dev Borrows tokens from the pool.
-     * @param amount The amount of tokens to borrow.
-     * Requirements:
-     * - The pool must have been initialized.
-     * - The amount to borrow must not exceed the inBorrowing amount.
-     */
-    function borrow(uint256 amount) external {
-        DataTypes.PoolManagerConfig
-            memory poolManagerConfig = _poolManagerConfig;
-        DataTypes.UserPoolConfig storage userPoolConfig = _userPoolConfig[
-            msg.sender
-        ];
-        DataTypes.UserPoolReserveInformation
-            storage userPoolReserveInformation = _userPoolReserveInformation[
-                msg.sender
-            ];
+        userPoolReserveInformation.debt += amount;
+        userPoolReserveInformation.claimableUSDT += amount;
 
-        require(userPoolConfig.init, "Pool not initialized");
-        require(
-            userPoolReserveInformation.inBorrowing >= amount,
-            "Insufficient inBorrowing amount"
-        );
+        _poolManagerReserveInformation.debt += amount;
+        _poolManagerReserveInformation.claimableUSDT += amount;
 
-        updateDebt(msg.sender);
-        userPoolReserveInformation.totalBorrowed += amount;
-        userPoolReserveInformation.inBorrowing -= amount;
-        poolManagerConfig.USDT.safeTransferFrom(
-            poolManagerConfig.AvalonUSDTVault,
-            msg.sender,
-            amount
-        );
-
-        emit TokensBorrowed(msg.sender, amount, userPoolReserveInformation);
+        emit Borrow(msg.sender, amount, userPoolReserveInformation);
     }
 
     /**
@@ -148,66 +115,56 @@ contract PoolManager is PoolManagerConfigurator, IPoolManager, Test {
      * Requirements:
      * - The pool must have been initialized.
      */
-    function repay(uint256 amount) external payable {
+    function repay(uint256 amount) external payable onlyInitializedPool {
+        updateState(msg.sender);
+
         DataTypes.PoolManagerConfig
             memory poolManagerConfig = _poolManagerConfig;
-        DataTypes.UserPoolConfig storage userPoolConfig = _userPoolConfig[
-            msg.sender
-        ];
         DataTypes.UserPoolReserveInformation
             storage userPoolReserveInformation = _userPoolReserveInformation[
                 msg.sender
             ];
+        DataTypes.PoolManagerReserveInformation
+            storage poolManagerReserveInformation = _poolManagerReserveInformation;
 
-        require(userPoolConfig.init, "Pool not initialized");
-
-        (uint256 feeForPool, uint256 feeForProtocal) = updateDebt(msg.sender);
-
-        require(amount > feeForProtocal + feeForPool, "too small repay amount");
+        amount = amount > userPoolReserveInformation.debt
+            ? userPoolReserveInformation.debt
+            : amount;
 
         poolManagerConfig.USDT.safeTransferFrom(
             msg.sender,
             address(this),
             amount
         );
+
+        uint256 repayAmountToProtocol = (amount *
+            userPoolReserveInformation.debtToProtocol) /
+            userPoolReserveInformation.debt;
+
+        uint256 repayAmountToPool = amount - repayAmountToProtocol;
+
         poolManagerConfig.USDT.safeTransfer(
             poolManagerConfig.AntaphaUSDTVault,
-            amount - feeForProtocal
+            repayAmountToPool
         );
-        _protocalProfitUnclaimed += feeForProtocal;
-        _protocalProfitAccumulate += feeForProtocal;
-        userPoolReserveInformation.totalBorrowed -= amount;
 
-        emit TokensRepaid(msg.sender, amount, userPoolReserveInformation);
-    }
+        userPoolReserveInformation.debt -= amount;
+        userPoolReserveInformation.debtToProtocol -= repayAmountToProtocol;
+        poolManagerReserveInformation.debt -= amount;
 
-    /**
-     * @dev Liquidates a user's pool reserve information.
-     * @param user The address of the user whose pool reserve information is to be liquidated.
-     * @param userPoolReserveInformation The user's pool reserve information to be updated.
-     * Requirements:
-     * - The caller must have the LIQUIDATION_ADMIN_ROLE.
-     */
-    function liquidate(
-        address user,
-        uint256 amount,
-        DataTypes.UserPoolReserveInformation memory userPoolReserveInformation
-    ) external onlyOwner {
-        DataTypes.PoolManagerConfig
-            memory poolManagerConfig = _poolManagerConfig;
-        poolManagerConfig.FBTC1.burn(amount);
-        _userPoolReserveInformation[user] = userPoolReserveInformation;
-        emit Liquidation(user, userPoolReserveInformation);
+        emit Repay(msg.sender, amount, userPoolReserveInformation);
     }
 
     /**
      * @dev Requests a withdrawal from the pool.
-     * @param amount The amount to withdraw.
+     * @param amount The amount to claimBTC.
      * Requirements:
      * - The pool must have been initialized.
-     * - The requested amount must not exceed the maximum allowable withdraw amount.
+     * - The requested amount must not exceed the maximum allowable claimBTC amount.
      */
-    function requestWithdraw(uint256 amount) external {
+    function withdraw(uint256 amount) external onlyInitializedPool {
+        updateState(msg.sender);
+
         DataTypes.PoolManagerConfig
             memory poolManagerConfig = _poolManagerConfig;
         DataTypes.UserPoolConfig memory userPoolConfig = _userPoolConfig[
@@ -217,38 +174,144 @@ contract PoolManager is PoolManagerConfigurator, IPoolManager, Test {
             storage userPoolReserveInformation = _userPoolReserveInformation[
                 msg.sender
             ];
+        DataTypes.PoolManagerReserveInformation
+            storage poolManagerReserveInformation = _poolManagerReserveInformation;
 
-        require(userPoolConfig.init, "Pool not initialized");
         require(
             calculateMaxWithdrawAmount(
-                userPoolConfig.maxWithdrawRate,
-                userPoolReserveInformation.totalSupply,
-                userPoolReserveInformation.totalBorrowed,
-                userPoolReserveInformation.inBorrowing,
+                userPoolConfig.liquidationThreshold,
+                userPoolReserveInformation.collateral,
+                userPoolReserveInformation.debt,
                 poolManagerConfig.FBTCOracle.getAssetPrice(),
                 IERC20Metadata(address(poolManagerConfig.USDT)).decimals(),
                 IERC20Metadata(address(poolManagerConfig.FBTC0)).decimals(),
                 poolManagerConfig.FBTCOracle.decimals()
             ) >= amount,
-            "Exceed withdraw limit"
+            "Exceed claimBTC limit"
         );
 
-        userPoolReserveInformation.totalSupply -= amount;
-        userPoolReserveInformation.inWithdrawing += amount;
-        emit WithdrawalRequested(
-            msg.sender,
-            amount,
-            userPoolReserveInformation
-        );
+        userPoolReserveInformation.collateral -= amount;
+        userPoolReserveInformation.claimableBTC += amount;
+
+        poolManagerReserveInformation.collateral -= amount;
+        poolManagerReserveInformation.claimableBTC += amount;
+        emit Withdraw(msg.sender, amount, userPoolReserveInformation);
     }
 
     /**
-     * @dev Confirms the minting of FBTC0 tokens.
+     * @dev Liquidates a portion of the user's collateral and debt.
+     * @param user The address of the user being liquidated.
+     * @param collateralDecrease The amount of collateral to decrease.
+     * @param debtDecrease The amount of debt to decrease.
+     * Requirements:
+     * - The pool must have been initialized.
+     * - Only the owner can call this function.
+     */
+    function liquidate(
+        address user,
+        uint256 collateralDecrease,
+        uint256 debtDecrease
+    ) external onlyOwner {
+        updateState(user);
+
+        DataTypes.PoolManagerConfig
+            memory poolManagerConfig = _poolManagerConfig;
+        DataTypes.UserPoolReserveInformation
+            storage userPoolReserveInformation = _userPoolReserveInformation[
+                user
+            ];
+        DataTypes.PoolManagerReserveInformation
+            storage poolManagerReserveInformation = _poolManagerReserveInformation;
+
+        userPoolReserveInformation.collateral -= collateralDecrease;
+        userPoolReserveInformation.debt -= debtDecrease;
+
+        poolManagerReserveInformation.collateral -= collateralDecrease;
+        poolManagerReserveInformation.debt -= debtDecrease;
+
+        poolManagerConfig.FBTC1.burn(collateralDecrease);
+        emit Liquidation(user, collateralDecrease, debtDecrease);
+    }
+
+    /**
+     * @dev Claims USDT from the pool.
+     * @param amount The amount of tokens to claimUSDT.
+     * Requirements:
+     * - The pool must have been initialized.
+     * - The amount to claimUSDT must not exceed the claimableUSDT amount.
+     */
+    function claimUSDT(uint256 amount) external onlyInitializedPool {
+        DataTypes.PoolManagerConfig
+            memory poolManagerConfig = _poolManagerConfig;
+        DataTypes.UserPoolReserveInformation
+            storage userPoolReserveInformation = _userPoolReserveInformation[
+                msg.sender
+            ];
+        DataTypes.PoolManagerReserveInformation
+            storage poolManagerReserveInformation = _poolManagerReserveInformation;
+
+        require(
+            userPoolReserveInformation.claimableUSDT >= amount,
+            "Insufficient claimableUSDT amount"
+        );
+        userPoolReserveInformation.claimableUSDT -= amount;
+        poolManagerReserveInformation.claimableUSDT -= amount;
+        poolManagerConfig.USDT.safeTransferFrom(
+            poolManagerConfig.AvalonUSDTVault,
+            msg.sender,
+            amount
+        );
+        emit ClaimUSDT(msg.sender, amount, userPoolReserveInformation);
+    }
+
+    /**
+     * @dev Claim FBTC0 from the pool.
+     * @param amount The amount of tokens to claimBTC.
+     * Requirements:
+     * - The pool must have been initialized.
+     */
+    function claimBTC(uint256 amount) external onlyInitializedPool {
+        DataTypes.PoolManagerConfig
+            memory poolManagerConfig = _poolManagerConfig;
+        DataTypes.UserPoolReserveInformation
+            storage userPoolReserveInformation = _userPoolReserveInformation[
+                msg.sender
+            ];
+        DataTypes.PoolManagerReserveInformation
+            storage poolManagerReserveInformation = _poolManagerReserveInformation;
+
+        require(
+            userPoolReserveInformation.claimableBTC >= amount,
+            "Exceed claimBTC limit"
+        );
+
+        userPoolReserveInformation.claimableBTC -= amount;
+        poolManagerReserveInformation.claimableBTC -= amount;
+        poolManagerConfig.FBTC1.confirmRedeemFbtc(amount);
+        poolManagerConfig.FBTC0.safeTransfer(msg.sender, amount);
+        emit ClaimBTC(msg.sender, amount, userPoolReserveInformation);
+    }
+
+    /**
+     * @dev Claims the accumulated protocol earnings.
+     * Requirements:
+     * - The caller must have the POOL_ADMIN_ROLE.
+     */
+    function claimProtocolEarnings() external onlyOwner {
+        DataTypes.PoolManagerConfig
+            memory poolManagerConfig = _poolManagerConfig;
+        uint256 claimAmount = poolManagerConfig.USDT.balanceOf(address(this));
+        poolManagerConfig.USDT.safeTransfer(msg.sender, claimAmount);
+        _protocalProfitUnclaimed -= claimAmount;
+    }
+
+    /**
+     * @dev Requests the minting of FBTC0 tokens.
      * @param amount The amount of FBTC0 tokens.
      * @param depositTxid The transaction ID of the deposit.
      * @param outputIndex The output index of the deposit transaction.
      */
-    function confirmMintFBTC0(
+    function requestMintFBTC0(
         uint256 amount,
         bytes32 depositTxid,
         uint256 outputIndex
@@ -262,51 +325,52 @@ contract PoolManager is PoolManagerConfigurator, IPoolManager, Test {
             outputIndex
         );
 
-        emit MintFBTC0Confirmed(amount, depositTxid, outputIndex);
+        emit RequestMintFBTC0(amount, depositTxid, outputIndex);
     }
 
     /**
-     * @dev Withdraws tokens from the pool.
-     * @param amount The amount of tokens to withdraw.
+     * @dev Sets the user's pool configuration.
+     * @param user The address of the user.
+     * @param configInput The user's pool configuration settings.
      * Requirements:
-     * - The pool must have been initialized.
+     * - Only the owner can call this function.
      */
-    function withdraw(uint256 amount) external {
-        DataTypes.PoolManagerConfig
-            memory poolManagerConfig = _poolManagerConfig;
-        DataTypes.UserPoolConfig memory userPoolConfig = _userPoolConfig[
-            msg.sender
-        ];
+    function setUserPoolConfig(
+        address user,
+        DataTypes.UserPoolConfig calldata configInput
+    ) external override onlyOwner {
+        updateState(user);
+        _userPoolConfig[user] = configInput;
+    }
+
+    /**
+     * @dev Updates the user's debt.
+     * @param user The address of the user.
+     */
+    function updateState(address user) internal {
+        // Load the user's pool configuration into memory
+        DataTypes.UserPoolConfig memory userPoolConfig = _userPoolConfig[user];
+        // Load the user's pool reserve information into storage
         DataTypes.UserPoolReserveInformation
             storage userPoolReserveInformation = _userPoolReserveInformation[
-                msg.sender
+                user
             ];
 
-        require(userPoolConfig.init, "Pool not initialized");
-        require(
-            userPoolReserveInformation.inWithdrawing >= amount,
-            "Exceed withdraw limit"
+        (uint256 feeForPool, uint256 feeForProtocal) = calculateAccumulatedDebt(
+            userPoolReserveInformation.debt,
+            userPoolConfig.poolInterestRate,
+            userPoolConfig.protocolInterestRate,
+            userPoolReserveInformation.timeStampIndex
         );
 
-        userPoolReserveInformation.inWithdrawing -= amount;
-        poolManagerConfig.FBTC1.confirmRedeemFbtc(amount);
-        poolManagerConfig.FBTC0.safeTransfer(msg.sender, amount);
-
-        emit TokensWithdrawn(msg.sender, amount, userPoolReserveInformation);
+        userPoolReserveInformation.timeStampIndex = uint40(block.timestamp);
+        userPoolReserveInformation.debt += feeForPool + feeForProtocal;
+        userPoolReserveInformation.debtToProtocol += feeForProtocal;
+        _protocalProfitUnclaimed += feeForProtocal;
+        _protocalProfitAccumulate += feeForProtocal;
     }
 
-    /**
-     * @dev Claims the accumulated protocol earnings.
-     * Requirements:
-     * - The caller must have the POOL_ADMIN_ROLE.
-     */
-    function claimProtocolEarnings() external onlyOwner {
-        DataTypes.PoolManagerConfig
-            memory poolManagerConfig = _poolManagerConfig;
-        poolManagerConfig.USDT.transfer(msg.sender, _protocalProfitUnclaimed);
-        _protocalProfitUnclaimed = 0;
-    }
-
+    //------------------------view functions--------------------------
     /**
      * @dev Gets the user's pool reserve information.
      * @param user The address of the user.
@@ -322,172 +386,117 @@ contract PoolManager is PoolManagerConfigurator, IPoolManager, Test {
             DataTypes.UserPoolReserveInformation memory reserveAfterUpdateDebt
         )
     {
-        DataTypes.PoolManagerConfig
-            memory poolManagerConfig = _poolManagerConfig;
         DataTypes.UserPoolConfig memory userPoolConfig = _userPoolConfig[user];
         DataTypes.UserPoolReserveInformation
             memory userPoolReserveInformation = _userPoolReserveInformation[
                 user
             ];
+        (uint256 feeForPool, uint256 feeForProtocal) = calculateAccumulatedDebt(
+            userPoolReserveInformation.debt,
+            userPoolConfig.poolInterestRate,
+            userPoolConfig.protocolInterestRate,
+            userPoolReserveInformation.timeStampIndex
+        );
+
         reserveAfterUpdateDebt.timeStampIndex = userPoolReserveInformation
             .timeStampIndex;
-        reserveAfterUpdateDebt.totalSupply = userPoolReserveInformation
-            .totalSupply;
-        reserveAfterUpdateDebt.inBorrowing = userPoolReserveInformation
-            .inBorrowing;
-        reserveAfterUpdateDebt.inWithdrawing = userPoolReserveInformation
-            .inWithdrawing;
-
-        (
-            uint256 feeForPool,
-            uint256 feeForProtocal
-        ) = calculateIncreasingInterest(
-                userPoolReserveInformation.totalBorrowed,
-                userPoolConfig.interestRate,
-                poolManagerConfig.PROTOCAL_FEE_INTEREST_RATE,
-                userPoolReserveInformation.timeStampIndex
-            );
-
-        reserveAfterUpdateDebt.totalBorrowed =
-            userPoolReserveInformation.totalBorrowed +
+        reserveAfterUpdateDebt.collateral = userPoolReserveInformation
+            .collateral;
+        reserveAfterUpdateDebt.claimableUSDT = userPoolReserveInformation
+            .claimableUSDT;
+        reserveAfterUpdateDebt.claimableBTC = userPoolReserveInformation
+            .claimableBTC;
+        reserveAfterUpdateDebt.debt =
+            userPoolReserveInformation.debt +
             feeForPool +
+            feeForProtocal;
+        reserveAfterUpdateDebt.debtToProtocol =
+            userPoolReserveInformation.debtToProtocol +
             feeForProtocal;
     }
 
     /**
-     * @dev Updates the user's debt.
-     * @param user The address of the user.
-     * @return feeForPool The fee for the user's interest rate.
-     * @return feeForProtocal The fee for the protocol's fee ratio.
-     */
-    function updateDebt(
-        address user
-    ) internal returns (uint256 feeForPool, uint256 feeForProtocal) {
-        // Load the pool manager configuration into memory
-        DataTypes.PoolManagerConfig
-            memory poolManagerConfig = _poolManagerConfig;
-        // Load the user's pool configuration into memory
-        DataTypes.UserPoolConfig memory userPoolConfig = _userPoolConfig[user];
-        // Load the user's pool reserve information into storage
-        DataTypes.UserPoolReserveInformation
-            storage userPoolReserveInformation = _userPoolReserveInformation[
-                user
-            ];
-
-        // Calculate the fee for the pool based on the user's interest rate and borrowed timestamp
-        (feeForPool, feeForProtocal) = calculateIncreasingInterest(
-            userPoolReserveInformation.totalBorrowed,
-            userPoolConfig.interestRate,
-            poolManagerConfig.PROTOCAL_FEE_INTEREST_RATE,
-            userPoolReserveInformation.timeStampIndex
-        );
-
-        // Update the total borrowed amount by adding both fees
-        userPoolReserveInformation.totalBorrowed += feeForPool + feeForProtocal;
-
-        // Update the borrowed timestamp to the current block timestamp
-        userPoolReserveInformation.timeStampIndex = uint40(block.timestamp);
-    }
-
-    //------------------------view functions--------------------------
-    /**
      * @dev Calculates the increasing interest for both the pool and the protocol.
-     * @param totalBorrowed The total amount borrowed.
+     * @param debt The total amount borrowed.
      * @param poolInterestRate The interest rate for the pool.
      * @param protocolInterestRate The interest rate for the protocol.
      * @param timeStampIndex The timestamp when the borrowing occurred.
      * @return feeForPool The calculated interest fee for the pool.
      * @return feeForProtocal The calculated interest fee for the protocol.
      */
-    function calculateIncreasingInterest(
-        uint256 totalBorrowed,
+    function calculateAccumulatedDebt(
+        uint256 debt,
         uint256 poolInterestRate,
         uint256 protocolInterestRate,
         uint40 timeStampIndex
     ) public view returns (uint256 feeForPool, uint256 feeForProtocal) {
-        // Calculate the fee for the pool based on the user's interest rate and borrowed timestamp
         feeForPool =
-            totalBorrowed.rayMul(
-                MathUtils.calculateLinearInterest(
+            debt.rayMul(
+                MathUtils.calculateCompoundedInterest(
                     (poolInterestRate * WadRayMath.RAY) / DENOMINATOR,
                     timeStampIndex
                 )
             ) -
-            totalBorrowed;
+            debt;
 
         // Calculate the fee for the protocol based on the protocol fee interest rate and borrowed timestamp
         feeForProtocal =
-            totalBorrowed.rayMul(
-                MathUtils.calculateLinearInterest(
+            debt.rayMul(
+                MathUtils.calculateCompoundedInterest(
                     (protocolInterestRate * WadRayMath.RAY) / DENOMINATOR,
                     timeStampIndex
                 )
             ) -
-            totalBorrowed;
-    }
-
-    /**
-     * @dev Calculates the maximum withdrawable amount.
-     * @param maxWithdrawRate The maximum withdrawal rate.
-     * @param totalSupply The total supply in the pool.
-     * @param inBorrowing The amount currently in borrowing.
-     * @param FBTC0Price The price of the FBTC0 token.
-     * @return The maximum amount that can be withdrawn.
-     */
-    function calculateMaxWithdrawAmount(
-        uint256 maxWithdrawRate,
-        uint256 totalSupply,
-        uint256 totalBorrowed,
-        uint256 inBorrowing,
-        uint256 FBTC0Price,
-        uint256 USDTDecimal,
-        uint256 FBTC0Decimal,
-        uint256 oracleDecimal
-    ) public view returns (uint256) {
-        if (totalBorrowed == 0) {
-            return totalSupply;
-        } else {
-            console.log(
-                ((((FBTC0Price *
-                    totalSupply *
-                    10 ** USDTDecimal -
-                    (inBorrowing + totalBorrowed) *
-                    10 ** FBTC0Decimal) * 10 ** oracleDecimal) /
-                    (FBTC0Price * 10 ** (USDTDecimal + FBTC0Decimal))) *
-                    maxWithdrawRate) / DENOMINATOR
-            );
-            return
-                ((((FBTC0Price *
-                    totalSupply *
-                    10 ** USDTDecimal -
-                    (inBorrowing + totalBorrowed) *
-                    10 ** FBTC0Decimal) * 10 ** oracleDecimal) /
-                    (FBTC0Price * 10 ** (USDTDecimal + FBTC0Decimal))) *
-                    maxWithdrawRate) / DENOMINATOR;
-        }
+            debt;
     }
 
     /**
      * @dev Calculates the maximum borrowable amount.
      * @param loanToValue The loan-to-value ratio.
-     * @param totalSupply The total supply in the pool.
-     * @param inBorrowing The amount currently in borrowing.
+     * @param collateral The total supply in the pool.
      * @param FBTC0Price The price of the FBTC0 token.
      * @return The maximum amount that can be borrowed.
      */
     function calculateMaxBorrowAmount(
         uint256 loanToValue,
-        uint256 totalSupply,
-        uint256 inBorrowing,
+        uint256 collateral,
+        uint256 debt,
         uint256 FBTC0Price,
         uint256 USDTDecimal,
         uint256 FBTC0Decimal,
         uint256 oracleDecimal
     ) public view returns (uint256) {
         return
-            (((totalSupply * FBTC0Price * 10 ** USDTDecimal) /
+            (((collateral * FBTC0Price * 10 ** USDTDecimal) /
                 (10 ** FBTC0Decimal * 10 ** oracleDecimal)) * loanToValue) /
             DENOMINATOR -
-            inBorrowing;
+            debt;
+    }
+
+    /**
+     * @dev Calculates the maximum withdrawable amount.
+     * @param collateral The total supply in the pool.
+     * @param FBTC0Price The price of the FBTC0 token.
+     * @return The maximum amount that can be withdrawn.
+     */
+    function calculateMaxWithdrawAmount(
+        uint256 liquidationThreshold,
+        uint256 collateral,
+        uint256 debt,
+        uint256 FBTC0Price,
+        uint256 USDTDecimal,
+        uint256 FBTC0Decimal,
+        uint256 oracleDecimal
+    ) public view returns (uint256) {
+        if (debt == 0) {
+            return collateral;
+        } else {
+            return
+                collateral -
+                (debt *
+                    10 ** (oracleDecimal + FBTC0Decimal - USDTDecimal) *
+                    DENOMINATOR) /
+                (FBTC0Price * liquidationThreshold);
+        }
     }
 }
